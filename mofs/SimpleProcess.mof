@@ -1,0 +1,17 @@
+[Description ("Simple process information"),
+ Provider("cmpi:SimpleProcess") ]
+class SimpleProcess : CIM_ManagedElement
+{
+   [Key, Description ("Process ID.") ]
+   uint32 PID;
+
+   [MaxLen (8), Description ("TTY port associated with the process.") ]
+   string TTY;
+
+   [Description ("CPU time consumed by the process.") ] 
+   uint64 Time;
+
+   [MaxLen (1240), Description ("Full command line used to invoke the process.") ]
+   string Command;
+};
+
