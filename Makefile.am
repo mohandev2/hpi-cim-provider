@@ -1,15 +1,8 @@
+SUBDIRS		= util src
 
-PRIVATE_PLUGIN = $(HOME)/.gaim/plugins
+TARFILE         = $(distdir).tar.gz
 
-EXTRA_DIST = gaim-meanwhile-ibm.spec
-
-SUBDIRS = src
-
-private-install:	all
-	mkdir -p $(PRIVATE_PLUGIN)
-	cp src/*/.libs/*.so $(PRIVATE_PLUGIN)
-
-
+EXTRA_DIST      = $(shell find $(srcdir)/src -name '*.h')
 
 ###################################################
 ### Convert below to Makefile.am format  ##########

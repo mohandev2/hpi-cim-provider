@@ -1,0 +1,30 @@
+// Pegasus CIMOM registration mof
+
+instance of PG_ProviderModule
+{
+   Name = "Hpi_ProviderModule";
+   Location = "Hpi";				// library filename; i.e. lib<Location>.so
+   Vendor = "OpenHPI";
+   Version = "0.0.1";
+   InterfaceType = "CMPI";
+   InterfaceVersion = "2.0.0";
+};
+
+instance of PG_Provider
+{
+   ProviderModuleName = "Hpi_ProviderModule";	// same as PG_ProviderModule.Name
+   Name = "Hpi";				// provider name as specified in CMPIInstanceMI()
+};
+
+instance of PG_ProviderCapabilities
+{
+   ProviderModuleName = "Hpi_ProviderModule";	// same as PG_ProviderModule.Name
+   ProviderName = "Hpi";			// same as PG_Provider.Name
+   CapabilityID = "1";
+   ClassName = "Hpi";				// classname from the mof
+   Namespaces = {"root/cimv2"};
+   ProviderType = { 2 };				// 2 = Instance Provider
+   SupportedProperties = NULL;				// NULL = all properties
+   SupportedMethods = NULL;				// NULL = all methods
+};
+

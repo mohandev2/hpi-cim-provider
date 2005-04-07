@@ -1,6 +1,6 @@
-[Description ("Simple process information"),
- Provider("cmpi:SimpleProcess") ]
-class SimpleProcess : CIM_ManagedElement
+[Description ("Hpi information"),
+ Provider("cmpi:Hpi") ]
+class Hpi : CIM_ManagedElement
 {
    [Key, Description ("Process ID.") ]
    uint32 PID;
