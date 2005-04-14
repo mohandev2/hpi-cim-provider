@@ -1,59 +1,73 @@
-SUBDIRS		= util src
+# $Id:
+# ==================================================================
+# (C) Copyright IBM Corp. 2005
+#
+# THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
+# ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
+# CONSTITUTES RECIPIENTS ACCEPTANCE OF THE AGREEMENT.
+#
+# You can obtain a current copy of the Common Public License from
+# http://www.opensource.org/licenses/cpl1.0.php
+#
+# Author:       Dr. Gareth S. Bestor, <bestorga@us.ibm.com>
+# Contributors:
+# Description:  Automake input file for sample CMPI process provider
+# ==================================================================
 
-TARFILE         = $(distdir).tar.gz
+# Start from an empty extra distribution file list
+EXTRA_DIST=
 
-EXTRA_DIST      = $(shell find $(srcdir)/src -name '*.h')
+# We must explicity add the RPM spec file to the distribution package
+EXTRA_DIST+=hpi-cim.spec
 
-###################################################
-### Convert below to Makefile.am format  ##########
-###################################################
+SUBDIRS = src
 
-# Include CMPI headers and lib paths
-include ./setting.cmpi
+# ==================================================================
+# Automake instructions for documentation
+# ==================================================================
 
-CLASSNAME=SimpleProcess
+# docdir defines where the documentation goes
+docdir=$(datadir)/doc/$(PACKAGE)-$(VERSION)
+doc_DATA=README AUTHORS COPYING 
 
-# BY DEFAULT BUILD ALL *.c SOURCES FILES INTO A LIKE-NAMED LIBRARY
-# SOURCES=$(shell ls -1 *.c)
-SOURCES=$(CLASSNAME).c
-LIBTARGETS=$(patsubst %.c, lib%.so, $(SOURCES))
-DEPFILES=$(SOURCES:.c=.d)
-OBJECTS=$(SOURCES:.c=.o)
+# ADD EXTRA DOC FILES IF PRESENT
+doc_DATA+=doc/rpmbuild.txt
+EXTRA_DIST+=doc
 
-SUBDIRS=$(shell find -type d -mindepth 1 -maxdepth 1)
+# providerdir defines where provider libraries will be installed (@PROVIDERDIR@ is set by the configure script). 
+#providerdir = @PROVIDERDIR@
 
-# Build Options
-export CFLAGS=-Wall -g -DDEBUG -fPIC
-CPPFLAGS=-I. $(foreach SUBDIR, $(SUBDIRS), -I./$(SUBDIR)) -I$(CIMOMINC) -I$(COMMONINC)
-LDFLAGS=-L. $(foreach SUBDIR, $(SUBDIRS), -L./$(SUBDIR)) -L$(CIMOMLIB) -L$(COMMONLIB) -shared -lpthread -lcmpiOSBase_Common 
-# ADD ANY EXTRA REQUIRED LIBRARIES HERE
-LOADLIBES=-lutil
+# ==================================================================
+# Automake instructions for ./src subdir
+# ==================================================================
+# MAKE CHANGES HERE TO COMPILE ALL THE SOURCE FILES FOR YOUR CMPI PROVIDER
 
-# REMAINDER OF THIS MAKEFILE GENERALLY WONT NEED TO BE MODIFIED
-%.d: %.c
-	@$(RM) $@
-	$(CC) -MM $(CPPFLAGS) $< | sed 's/\($*\)\.o[ :]*/\1.o $@ : /g' > $@
-                                                                                                                      
-lib%.so: %.o
-	$(LINK.c) -shared $^ $(LOADLIBES) $(LDLIBS)-o $@
-                                                                                                                      
-.PHONY: all clean install uninstall $(SUBDIRS) 
+# LIST EACH CMPI CLASS PROVIDER LIBRARY, ITS SOURCE FILE(S), AND ANY LIBS REQUIRED FOR LINKING HERE
+# Files and Directories CMPI provider libraries
+#provider_LTLIBRARIES = libHpiCimProvider.la
+#libHpiCimProvider_la_SOURCES = src/HpiCimProvider.c
 
-all: $(SUBDIRS) $(LIBTARGETS)
+# ==================================================================
+# Automake instructions for ./schema subdir
+# ==================================================================
+# CHANGES THE MOF AND REGISTRATION FILENAMES TO MATCH THE FILES IN ./schema
 
-clean: $(SUBDIRS)
-	$(RM) $(OBJECTS) $(DEPFILES) $(LIBTARGETS)
+# LIST ALL PROVIDER CLASS DEFINITION FILES (MOFS) HERE
+MOFS=mofs/Hpi.mof
 
-install: $(SUBDIRS) $(LIBTARGETS)
-	$(foreach LIB, $(LIBTARGETS), install -m 755 $(LIB) $(CIMOMLIB); )
+# LIST ALL THE CIMOM-SPECIFIC CLASS REGISTRATION DATA FILES HERE
+REGISTRATIONS=mofs/HpiRegister.mof
+REGISTRATIONS.pegasus=mofs/HpiRegister.mof
 
-uninstall: $(SUBDIRS) 
-	$(foreach LIB, $(LIBTARGETS), rm -f $(CIMOMLIB)/$(LIB); )
+# Register the provider(s) and class definition(s) to the current CIM server/CIMOM
+postinstall:
+	test x"$(MOFS)" != x && \
+		sh provider-register.sh -t @CIMSERVER@ -s $(MOFS)
+	test x"$(REGISTRATIONS.@CIMSERVER@)" != x && \
+		sh provider-register.sh -t @CIMSERVER@ -r $(REGISTRATIONS.@CIMSERVER@)
 
-$(SUBDIRS):
-	$(MAKE) -C $@ $(MAKECMDGOALS)
-
-ifneq ($(MAKECMDGOALS),clean)
-include $(DEPFILES)
-endif
+# Explicity add all the schema files to the distribution package
+pkgdata_DATA=$(MOFS) $(REGISTRATIONS)
+pkgdata_SCRIPTS=provider-register.sh
+EXTRA_DIST+=$(pkgdata_DATA) $(pkgdata_SCRIPTS)
 

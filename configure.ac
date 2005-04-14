@@ -1,45 +1,76 @@
-dnl configure.ac for HpiCimProvider
-dnl by Renier Morales <renierm@users.sf.net>
+#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
 
-
-AC_PREREQ([2.57])
-AC_INIT(HpiCimProvider, 0.0.1)
-AC_CONFIG_SRCDIR([README])
+AC_PREREQ(2.57)
+AC_INIT(CMPI HPI-CIM Provider, 0.1.0, renierm@us.ibm.com, HpiCimProvider)
+# CHANGE THIS TO THE RELATIVE PATHNAME OF *ONE* OF THE SOURCE FILES
+AC_CONFIG_SRCDIR([src/HpiCimProvider.c])
 AM_INIT_AUTOMAKE([1.8])
-AM_CONFIG_HEADER(config.h)
-AH_TOP([#ifndef __OPENHPI_CONFIG_H
-#define __OPENHPI_CONFIG_H])
-AH_BOTTOM([#endif /* __OPENHPI_CONFIG_H */])
 
-AC_PROG_LIBTOOL
-LIBTOOL="$LIBTOOL --silent"
+# DECLARE ANY SPECIAL CUSTOM CONFIGURE COMMAND LINE OPTIONS HERE
+AC_ARG_VAR([PROVIDERDIR],[the directory where the CMPI providers will be installed.])
+AC_ARG_VAR([CIMSERVER],[the target CIM server (pegasus|sfcb|openwbem|sniacimom).])
 
+# ADD CHECKS FOR ANY SPECIAL REQUIRED PROGRAMS HERE. e.g.
+#AC_CHECK_PROG(YACC,bison,[bison -y])
+
+# ADD CHECKS FOR ANY SPECIAL REQUIRED LIBRARIES
+#OPENHPI_LIBS=
+#AC_CHECK_LIB(openhpi, saHpiSessionOpen, OPENHPI_LIBS="-lopenhpi",
+#             AC_MSG_ERROR("Couldn't load libopenhpi. Get from http://openhpi.sf.net"), $LIBS)
+#             AC_SUBST(OPENHPI_LIBS)
+
+# ADD CHECKS FOR ANY SPECIAL REQUIRED HEADER FILES HERE
+AC_CHECK_HEADERS([stdlib.h string.h unistd.h])
+AC_CHECK_HEADERS([SaHpi.h])
+
+# ADD CHECKS FOR ANY SPECIAL REQUIRED TYPEDEFS, STRUCTURES AND COMPILER OPTIONS HERE
+AC_C_CONST
+AC_TYPE_SIZE_T
+
+# ADD CHECKS FOR ANY SPECIAL REQUIRED LIBRARY FUNCTIONS HERE
+AC_CHECK_FUNCS([popen])
+
+
+### NO CHANGES SHOULD BE NECESSARY BELOW
+
+AC_CONFIG_HEADER([config.h])
+AM_INIT_AUTOMAKE
+
+# Check for required programs.
 AC_PROG_CC
-AC_PROG_INSTALL
+AC_PROG_LIBTOOL
 
-# Checks for libraries.
-AC_CHECK_LIB([cmpiOSBase_Common], [_check_system_key_value_pairs])
-AC_CHECK_LIB([pthread], [__pthread_lock])
+HPI_CIM_VERSION=0:0:0
+AC_SUBST(HPI_CIM_VERSION)
 
-# Checks for header files.
+# Check for required headers
 AC_HEADER_STDC
-AC_CHECK_HEADERS([stdlib.h string.h unistd.h signal.h])
-AC_CHECK_HEADERS([cmpidt.h cmpift.h cmpimacs.h OSBase_Common.h ])
-# Checks for library functions.
-AC_FUNC_VPRINTF
 
-#Substitution variables here
+# Check for required CMPI header files (defined in acinclude.m4)
+CHECK_CMPI
 
-############################
+# Check for required libraries (defined in acinclude.m4)
+CHECK_PROVIDERDIR
 
-AC_CONFIG_FILES(
-	[Makefile
-	 utils/Makefile
-	 src/Makefile
-	 mofs/Makefile]
-)
+# Check for CIM Server (defined in acinclude.m4)
+CHECK_CIMSERVER
 
+# Display configuration options
+echo "-------------------------------------------------------"
+echo "Configuration for $PACKAGE complete."
+echo ""
+echo "The following configuration options have been selected:"
+echo "CIMSERVER: " $CIMSERVER
+echo "PROVIDERDIR: " $PROVIDERDIR
+echo "CPPFLAGS:" $CPPFLAGS
+echo "-------------------------------------------------------"
+
+# CHANGE THIS TO THE NAME OF THE RPM SPEC FILE
+AC_CONFIG_FILES([hpi-cim.spec Makefile src/Makefile])
+
+# Generate configure scripts for the Makefile
 AC_OUTPUT
 
+echo "You may now run make"
 
-# The End.

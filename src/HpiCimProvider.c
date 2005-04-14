@@ -1,3 +1,20 @@
+// $Id:
+// =============================================================================
+// (C) Copyright IBM Corp. 2005
+//
+// THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
+// ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
+// CONSTITUTES RECIPIENTS ACCEPTANCE OF THE AGREEMENT.
+//
+// You can obtain a current copy of the Common Public License from
+// http://www.opensource.org/licenses/cpl1.0.php
+//
+// Author:       Dr. Gareth S. Bestor, <bestorga@us.ibm.com>
+// Contributors:
+// Last Updated: April 12, 2005
+// Description:  Sample CMPI process provider.
+// =============================================================================
+
 /* Include the required CMPI macros, data types, and API function headers */
 #include "cmpidt.h"
 #include "cmpift.h"
@@ -6,7 +23,8 @@
 /* Simple logging facility, in case the standard SBLIM _OSBASE_TRACE() isn't available */
 #ifndef _OSBASE_TRACE
 #include <stdarg.h>
-void _OSBASE_TRACE(int LEVEL, char *fmt,...)
+#define _OSBASE_TRACE(x,y) _logstderr y
+void _logstderr(char *fmt,...)
 {
    va_list ap;
    va_start(ap,fmt);
@@ -16,11 +34,14 @@ void _OSBASE_TRACE(int LEVEL, char *fmt,...)
 }
 #endif
 
-/* This is needed by SimpleProcess for kill() */
+/* Only needed by this provider for kill() */
 #include <signal.h>
 
 /* Handle to the CIM broker. This is initialized by the CIMOM when the provider is loaded */
 static CMPIBroker * _BROKER;
+
+/* Name of this provider */
+static char * _PROVIDER = "CWS_ProcessProvider";
 
 
 /* ---------------------------------------------------------------------------
@@ -43,20 +64,20 @@ static CMPIStatus EnumInstanceNames(
 
    /* Custom vars for SimpleProcess */
    char buffer[1024];				/* Text buffer to read in data for each process */
-
-   _OSBASE_TRACE(1,("EnumInstanceNames() called"));
+   
+   _OSBASE_TRACE(1,("%s:EnumInstanceNames() called", _PROVIDER));
 
    /* Create a new template object path for returning results */
    objectpath = CMNewObjectPath(_BROKER, namespace, classname, &status);
    if (status.rc != CMPI_RC_OK) {
-      _OSBASE_TRACE(1,("EnumInstanceNames() : Failed to create new object path - %s", CMGetCharPtr(status.msg)));
+      _OSBASE_TRACE(1,("%s:EnumInstanceNames() : Failed to create new object path - %s", _PROVIDER, CMGetCharPtr(status.msg)));
       CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to create new object path");
    }
 
    /* Run the ps command to get the process data and read it in via a pipe */
    instances = popen("ps -e --no-headers", "r");
    if (instances == NULL) {
-      _OSBASE_TRACE(1,("EnumInstanceNames() : Failed to get process data"));
+      _OSBASE_TRACE(1,("%s:EnumInstanceNames() : Failed to get process data", _PROVIDER));
       CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to get process data");
    }
 
@@ -82,7 +103,7 @@ static CMPIStatus EnumInstanceNames(
 
    /* Finished EnumInstanceNames */
    CMReturnDone(results);
-   _OSBASE_TRACE(1,("EnumInstanceNames() %s", (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+   _OSBASE_TRACE(1,("%s:EnumInstanceNames() %s", _PROVIDER, (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 }
 
@@ -105,20 +126,20 @@ static CMPIStatus EnumInstances(
    /* Custom vars for SimpleProcess */
    char buffer[1024];				/* Text buffer to read in data for each process */
 
-   _OSBASE_TRACE(1,("EnumInstances() called"));
+   _OSBASE_TRACE(1,("%s:EnumInstances() called", _PROVIDER));
 
    /* Create a new template instance for returning results */
    /* NB - we create a CIM instance from an existing CIM object path */
    instance = CMNewInstance(_BROKER, CMNewObjectPath(_BROKER, namespace, classname, &status), &status);
    if (status.rc != CMPI_RC_OK) {
-      _OSBASE_TRACE(1,("EnumInstances() : Failed to create new instance - %s", CMGetCharPtr(status.msg)));
+      _OSBASE_TRACE(1,("%s:EnumInstances() : Failed to create new instance - %s", _PROVIDER, CMGetCharPtr(status.msg)));
       CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to create new instance");
    }
 
    /* Run the ps command to get the process data and read it in via a pipe */
    instances = popen("ps -e --no-headers", "r");
    if (instances == NULL) {
-      _OSBASE_TRACE(1,("EnumInstances() : Failed to get process data"));
+      _OSBASE_TRACE(1,("%s:EnumInstances() : Failed to get process data", _PROVIDER));
       CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to get process data");
    }
 
@@ -149,7 +170,7 @@ static CMPIStatus EnumInstances(
 
    /* Finished EnumInstances */
    CMReturnDone(results);
-   _OSBASE_TRACE(1,("EnumInstances() %s",(status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+   _OSBASE_TRACE(1,("%s:EnumInstances() %s", _PROVIDER, (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 }
 
@@ -172,33 +193,35 @@ static CMPIStatus GetInstance(
    /* Custom vars for SimpleProcess */
    char buffer[1024];				/* Text buffer to read in data for each process */
    CMPIData pidData;				/* Desired PID datum from the reference object path */
+   unsigned long pid;				/* Desired PID extracted from pidData */
 
-   _OSBASE_TRACE(1,("GetInstance() called"));
+   _OSBASE_TRACE(1,("%s:GetInstance() called", _PROVIDER));
 
    /* Get the desired process PID from the reference object path */
    /* NB - CMGetKey() returns a CMPIData object which is an encapsulated CMPI data type, not a raw integer */
    pidData = CMGetKey(reference, "PID", &status);
    if (status.rc != CMPI_RC_OK || CMIsNullValue(pidData)) {
-      _OSBASE_TRACE(1,("GetInstance() : Cannot determine desired process - %s", CMGetCharPtr(status.msg)));
+      _OSBASE_TRACE(1,("%s:GetInstance() : Cannot determine desired process - %s", _PROVIDER, CMGetCharPtr(status.msg)));
       CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Cannot determine desired process");
    }
+   pid = pidData.value.uint32;
 
    /* Create a new template instance for returning results */
    /* NB - we create a CIM instance from an existing CIM object path */
    instance = CMNewInstance(_BROKER, CMNewObjectPath(_BROKER, namespace, classname, &status), &status);
    if (status.rc != CMPI_RC_OK) {
-      _OSBASE_TRACE(1,("GetInstance() : Failed to create new instance - %s", CMGetCharPtr(status.msg)));
+      _OSBASE_TRACE(1,("%s:GetInstance(): : Failed to create new instance - %s", _PROVIDER, CMGetCharPtr(status.msg)));
       CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to create new instance");
    }
 
    /* Run the ps command to get just this process's data and read it in via a pipe */
-   sprintf(buffer, "ps -p %d --no-headers", pidData.value.uint32);
+   sprintf(buffer, "ps -p %u --no-headers", pid);
    instances = popen(buffer, "r");
    if (instances == NULL) {
-      _OSBASE_TRACE(1,("GetInstance() : Failed to get process data"));
+      _OSBASE_TRACE(1,("%s:GetInstance() : Failed to get process data", _PROVIDER));
       CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to get process data");
    }
-   
+
    /* Read in the desired instance */
    if (fgets(buffer, 1024, (FILE *)instances) != NULL) {
       unsigned int pid;
@@ -219,6 +242,9 @@ static CMPIStatus GetInstance(
 
       /* Add the instance for this process to the list of results */
       CMReturnInstance(results, instance);
+   } else {
+      _OSBASE_TRACE(1,("%s:GetInstance() : Failed to get process data for PID=%u", _PROVIDER, pid));
+      CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to get process data");
    }
 
    /* Finished reading all the process data */
@@ -226,7 +252,7 @@ static CMPIStatus GetInstance(
 
    /* Finished */
    CMReturnDone(results);
-   _OSBASE_TRACE(1,("GetInstance() %s",(status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+   _OSBASE_TRACE(1,("%s:GetInstance() %s", _PROVIDER, (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 }
 
@@ -239,7 +265,10 @@ static CMPIStatus SetInstance(
 		CMPIObjectPath * reference,	/* [in] Contains the CIM namespace, classname and desired object path */
 		CMPIInstance * newinstance)	/* [in] Contains all the new instance data */
 {
+   _OSBASE_TRACE(1,("%s:SetInstance() called", _PROVIDER));
+
    /* We cannot modify processes programmatically */
+   _OSBASE_TRACE(1,("%s:SetInstance() failed", _PROVIDER));
    CMReturn(CMPI_RC_ERR_NOT_SUPPORTED);
 }
 
@@ -252,7 +281,10 @@ static CMPIStatus CreateInstance(
 		CMPIObjectPath * reference,	/* [in] Contains the CIM namespace, classname and desired object path */
 		CMPIInstance * newinstance)	/* [in] Contains all the new instance data */
 {
+   _OSBASE_TRACE(1,("%s:CreateInstance() called", _PROVIDER));
+
    /* We cannot create new processes programmatically */
+   _OSBASE_TRACE(1,("%s:CreateInstance() failed", _PROVIDER));
    CMReturn(CMPI_RC_ERR_NOT_SUPPORTED);
 }
 
@@ -269,27 +301,29 @@ static CMPIStatus DeleteInstance(
                                                                                                                             
    /* Custom vars for SimpleProcess */
    CMPIData pidData;				/* Desired PID datum from the reference object path */
+   unsigned long pid;				/* Desired PID extracted from pidData */
 
-   _OSBASE_TRACE(1,("DeleteInstance() called"));
+   _OSBASE_TRACE(1,("%s:DeleteInstance() called", _PROVIDER));
 
    /* Get the desired process PID from the reference object path */
    /* NB - CMGetKey() returns a CMPIData object which is an encapsulated CMPI data type, not a raw integer */
    pidData = CMGetKey(reference, "PID", &status);
    if (status.rc != CMPI_RC_OK || CMIsNullValue(pidData)) {
-      _OSBASE_TRACE(1,("GetInstance() : Cannot determine desired process - %s", CMGetCharPtr(status.msg)));
+      _OSBASE_TRACE(1,("%s:DeleteInstance() : Cannot determine desired process - %s", _PROVIDER, CMGetCharPtr(status.msg)));
       CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Cannot determine desired process");
    }
+   pid = pidData.value.uint32;
 
    /* 'Delete' the desired process by kill()'ing it! */
    /* NB - we're being lazy here and not first checking that desired process actually exists! */  
-   if (kill(pidData.value.uint32, SIGKILL) != 0) {
-      _OSBASE_TRACE(1,("DeleteInstance() : Failed to kill process"));
+   if (kill(pid, SIGKILL) != 0) {
+      _OSBASE_TRACE(1,("%s:DeleteInstance() : Failed to kill process PID=%u", _PROVIDER, pid));
       CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to kill process");
    }
  
    /* Finished */
    CMReturnDone(results);
-   _OSBASE_TRACE(1,("DeleteInstance() %s",(status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+   _OSBASE_TRACE(1,("%s:DeleteInstance() %s", _PROVIDER, (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
    return status;
 }
 
@@ -303,7 +337,10 @@ static CMPIStatus ExecQuery(
 		char * language,		/* [in] Name of the query language (e.g. "WQL") */ 
 		char * query)			/* [in] Text of the query, written in the query language */ 
 {
-   /* 'nuff said */
+   _OSBASE_TRACE(1,("%s:ExecQuery() called", _PROVIDER));
+
+   /* Not implemented, yet... */
+   _OSBASE_TRACE(1,("%s:ExecQuery() failed", _PROVIDER));
    CMReturn(CMPI_RC_ERR_NOT_SUPPORTED);
 }
 
@@ -313,8 +350,22 @@ static CMPIStatus Cleanup(
 		CMPIInstanceMI * self,		/* [in] Handle to this provider (i.e. 'self') */
 		CMPIContext * context)		/* [in] Additional context info, if any */
 {
+   _OSBASE_TRACE(1,("%s:Cleanup() called", _PROVIDER));
+
    /* Nothing needs to be done */
+   _OSBASE_TRACE(1,("%s:Cleanup() succeeded", _PROVIDER));
    CMReturn(CMPI_RC_OK);
+}
+
+
+/* OPTIONAL: Initialize() is *NOT* a predefined CMPI method. See CMInstanceMIStub() below */
+static void Initialize(
+		CMPIBroker *broker)		/* [in] Handle to the CIMOM */
+{
+   _OSBASE_TRACE(1,("%s:Initialize() called", _PROVIDER));
+
+   /* Nothing needs to be done */
+   _OSBASE_TRACE(1,("%s:Initialize() succeeded", _PROVIDER));
 }
 
 
@@ -322,7 +373,18 @@ static CMPIStatus Cleanup(
  * CMPI PROVIDER SETUP
  * --------------------------------------------------------------------------- */
 
-/* Factory method that creates the handle to this provider, specifically setting up the function table */
-/* NB - the first param is blank because this provider's instance function names do not need a custom prefix */
-CMInstanceMIStub( , SimpleProcess, _BROKER, CMNoHook);
+/* Factory method that creates the handle to this provider, specifically setting up the function table:
+   - 1st param is an optional prefix for method names in the function table. It is blank in this sample
+     provider because the instance method function names do not need a unique prefix .
+   - 2nd param is the name to call this provider in the CIMOM. It is recommended to call your provider
+     "<_CLASSNAME>" or "<_CLASSNAME>Provider" - the name must be unique among all providers.
+   - 3rd param is the local variable acting as a handle to the CIMOM. It will be initialized by the CIMOM
+     when the provider is loaded. 
+   - 4th param specified the the provider's initialization function to be called immediately after
+     loading the provider. Specify "CMNoHook" if not required. */
+CMInstanceMIStub( , CWS_ProcessProvider, _BROKER, Initialize(_BROKER));
+
+/* If no special initialization is required then remove the Initialize() function and use:
+CMInstanceMIStub( , CWS_ProcessProvider, _BROKER, CMNoHook);
+*/
 
