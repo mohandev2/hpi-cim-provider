@@ -1,0 +1,83 @@
+#
+# $Id$
+#
+# Package spec for @PACKAGE@
+#
+
+BuildRoot: /var/tmp/buildroot
+
+Summary: HPI CMPI Provider
+Name: @PACKAGE_TARNAME@
+Version: @PACKAGE_VERSION@
+Release: @CIMSERVER@
+Group: Systems Management/Base
+License: BSD
+
+Source0: http://prdownloads.sourceforge.net/openhpi/%{name}-%{version}.tar.bz2
+
+BuildRequires: cmpi-devel
+Requires: cimserver
+
+%Description
+HPI CMPI Provider.
+
+%prep
+
+%setup -T -b 0 -n %{name}-%{version}
+
+export PATCH_GET=0
+#%patch0 -p1
+
+%build
+
+%configure --disable-debug
+make
+
+%install
+
+if [ `id -ur` != 0 ]
+then
+# paranoia check 
+	rm -rf $RPM_BUILD_ROOT 
+fi
+
+make DESTDIR=$RPM_BUILD_ROOT install
+
+# remove unused libtool files
+rm -f $RPM_BUILD_ROOT/%{_libdir}/*a
+rm -f $RPM_BUILD_ROOT/%{_libdir}/cmpi/*a
+
+%clean
+if [ `id -ur` != 0 ]
+then
+# paranoia check 
+	rm -rf $RPM_BUILD_ROOT 
+fi
+
+%post
+# Register Schema and Provider - this is higly provider specific
+
+%{_datadir}/%{name}/provider-register.sh -t @CIMSERVER@ \
+	-s %{_datadir}/%{name}/CWS_FAD.mof > /dev/null
+
+%if @CIMSERVER@ == pegasus
+%{_datadir}/%{name}/provider-register.sh -t @CIMSERVER@ \
+	-r %{_datadir}/%{name}/HpiRegister.mof > /dev/null
+%endif
+
+%if @CIMSERVER@ == sfcb
+%{_datadir}/%{name}/provider-register.sh -t @CIMSERVER@ \
+	-r %{_datadir}/%{name}/HpiRegister.reg > /dev/null
+%endif
+
+/sbin/ldconfig
+
+%postun
+/sbin/ldconfig
+
+%files
+%defattr(-,root,root)
+%{_datadir}/%{name}
+%{_datadir}/doc/%{name}-%{version}
+%{_libdir}/*.so*
+%{_libdir}/cmpi/*.so*
