@@ -19,6 +19,7 @@
 #include "cmpidt.h"
 #include "cmpift.h"
 #include "cmpimacs.h"
+#include "SaHpi.h"
 
 /* Simple logging facility, in case the standard SBLIM _OSBASE_TRACE() isn't available */
 #ifndef _OSBASE_TRACE

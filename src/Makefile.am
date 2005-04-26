@@ -2,7 +2,7 @@
 MAINTAINERCLEANFILES    = Makefile.in
 MOSTLYCLEANFILES        = @TEST_CLEAN@
 
-AM_CFLAGS		= @CPPFLAGS@
+AM_CFLAGS		= @CPPFLAGS@ @OPENHPI_CFLAGS@
 
 # providerdir defines where provider libraries will be installed (@PROVIDERDIR@ is setby the configure script).
 providerdir = @PROVIDERDIR@

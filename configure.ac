@@ -15,23 +15,24 @@ AC_ARG_VAR([CIMSERVER],[the target CIM server (pegasus|sfcb|openwbem|sniacimom).
 #AC_CHECK_PROG(YACC,bison,[bison -y])
 AC_CHECK_PROG([found_pkg_config],[pkg-config],[yes])
 if test "x$found_pkg_config" != "xyes"; then
-    OH_CHECK_FAIL(pkg-config,pkg-config)
+    MY_CHECK_FAIL(pkg-config,pkg-config)
 fi
-
-# ADD CHECKS FOR ANY SPECIAL REQUIRED LIBRARIES
-OPENHPI_LIBS=""
-AC_CHECK_LIB(openhpi, saHpiSessionOpen, OPENHPI_LIBS="-lopenhpi",
-             AC_MSG_ERROR("Couldn't load libopenhpi. Get from http://openhpi.sf.net"),
-	     $LIBS)
-AC_SUBST(OPENHPI_LIBS)
 
 # ADD CHECKS FOR ANY SPECIAL REQUIRED HEADER FILES HERE
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h])
 
-OPENHPI_CFLAGS=`pkg-config --cflags openhpi`
-CFLAGS="$CFLAGS $OPENHPI_CLFAGS"
-AC_CHECK_HEADERS([SaHpi.h])
+OPENHPI_CFLAGS=`pkg-config --cflags openhpi 2>/dev/null`
+if test -z "$OPENHPI_CFLAGS"; then
+    MY_CHECK_FAIL(openhpi,openhpi,http://openhpi.sf.net)
+fi
 AC_SUBST(OPENHPI_CFLAGS)
+
+# ADD CHECKS FOR ANY SPECIAL REQUIRED LIBRARIES
+OPENHPI_LIBS=""
+AC_CHECK_LIB(openhpi, saHpiVersionGet, OPENHPI_LIBS="-lopenhpi",
+             AC_MSG_ERROR("Couldn't load libopenhpi. Get from http://openhpi.sf.net"),
+	     $LIBS)
+AC_SUBST(OPENHPI_LIBS)
 
 # ADD CHECKS FOR ANY SPECIAL REQUIRED TYPEDEFS, STRUCTURES AND COMPILER OPTIONS HERE
 AC_C_CONST

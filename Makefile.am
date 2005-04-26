@@ -2,14 +2,14 @@
 # ==================================================================
 # (C) Copyright IBM Corp. 2005
 #
-# THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
-# ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
-# CONSTITUTES RECIPIENTS ACCEPTANCE OF THE AGREEMENT.
+# THIS PROGRAM IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL,
+# BUT WITHOUGH ANY WARRANTY; WITHOUT EVEN THE IMPLIED WARRANTY OF
+# MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. THIS FILE 
+# AND PROGRAM ARE LICENSED UNDER A BSD STYLE LICENSE. SEE THE
+# COPYING FILE INCLUDED WITH THE OPENHPI DISTRIBUTION FOR FULL
+# LICENSING TERMS.
 #
-# You can obtain a current copy of the Common Public License from
-# http://www.opensource.org/licenses/cpl1.0.php
-#
-# Author:       Dr. Gareth S. Bestor, <bestorga@us.ibm.com>
+# Author:       Renier Morales, <renierm@users.sf.net>
 # Contributors:
 # Description:  Automake input file for sample CMPI process provider
 # ==================================================================
