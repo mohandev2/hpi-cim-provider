@@ -31,8 +31,8 @@ docdir=$(datadir)/doc/$(PACKAGE)-$(VERSION)
 doc_DATA=README AUTHORS COPYING 
 
 # ADD EXTRA DOC FILES IF PRESENT
-doc_DATA+=doc/rpmbuild.txt
-EXTRA_DIST+=doc
+#doc_DATA+=doc/rpmbuild.txt
+#EXTRA_DIST+=doc
 
 # providerdir defines where provider libraries will be installed (@PROVIDERDIR@ is set by the configure script). 
 #providerdir = @PROVIDERDIR@
