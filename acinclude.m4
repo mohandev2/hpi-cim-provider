@@ -1,20 +1,19 @@
 dnl
 dnl $Id$
 dnl
- dnl 
- dnl (C) Copyright IBM Corp. 2005
  dnl
- dnl THIS PROGRAM IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL,
- dnl BUT WITHOUGH ANY WARRANTY; WITHOUT EVEN THE IMPLIED WARRANTY OF
- dnl MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. THIS FILE
- dnl AND PROGRAM ARE LICENSED UNDER A BSD STYLE LICENSE. SEE THE
- dnl COPYING FILE INCLUDED WITH THE OPENHPI DISTRIBUTION FOR FULL
- dnl LICENSING TERMS.
+ dnl (C) Copyright IBM Corp. 2004, 2005
+ dnl
+ dnl THIS FILE IS PROVIDED UNDER THE TERMS OF THE COMMON PUBLIC LICENSE
+ dnl ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THIS FILE
+ dnl CONSTITUTES RECIPIENTS ACCEPTANCE OF THE AGREEMENT.
+ dnl
+ dnl You can obtain a current copy of the Common Public License from
+ dnl  http://www.opensource.org/licenses/cpl1.0.php
  dnl
  dnl Author:       Konrad Rzeszutek <konradr@us.ibm.com>
  dnl Contributors: Viktor Mihajlovski <mihajlov@de.ibm.com>
- dnl		   Renier Morales <renierm@users.sf.net>
- dnl Date:	   09/20/2004
+ dnl Date  :          09/20/2004
 dnl
 dnl
 dnl CHECK_CMPI: Check for CMPI headers and set the CPPFLAGS
