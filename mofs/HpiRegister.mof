@@ -2,24 +2,24 @@
 
 instance of PG_ProviderModule
 {
-   Name = "Hpi_ProviderModule";
+   Name = "Hpi";
    Location = "Hpi";				// library filename; i.e. lib<Location>.so
    Vendor = "OpenHPI";
-   Version = "0.0.1";
+   Version = "2.0.3";
    InterfaceType = "CMPI";
    InterfaceVersion = "2.0.0";
 };
 
 instance of PG_Provider
 {
-   ProviderModuleName = "Hpi_ProviderModule";	// same as PG_ProviderModule.Name
-   Name = "Hpi";				// provider name as specified in CMPIInstanceMI()
+   ProviderModuleName = "Hpi";                  // same as PG_ProviderModule.Name
+   Name = "HpiProvider";			// provider name as specified in CMPIInstanceMI()
 };
 
 instance of PG_ProviderCapabilities
 {
-   ProviderModuleName = "Hpi_ProviderModule";	// same as PG_ProviderModule.Name
-   ProviderName = "Hpi";			// same as PG_Provider.Name
+   ProviderModuleName = "Hpi";          	// same as PG_ProviderModule.Name
+   ProviderName = "HpiProvider";		// same as PG_Provider.Name
    CapabilityID = "1";
    ClassName = "Hpi";				// classname from the mof
    Namespaces = {"root/cimv2"};

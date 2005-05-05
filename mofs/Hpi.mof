@@ -1,17 +1,8 @@
-[Description ("Hpi information"),
+[Description ("HPI Resource information"),
  Provider("cmpi:Hpi") ]
 class Hpi : CIM_ManagedElement
 {
-   [Key, Description ("Process ID.") ]
-   uint32 PID;
-
-   [MaxLen (8), Description ("TTY port associated with the process.") ]
-   string TTY;
-
-   [Description ("CPU time consumed by the process.") ] 
-   uint64 Time;
-
-   [MaxLen (1240), Description ("Full command line used to invoke the process.") ]
-   string Command;
+   [Key, Description ("Resource ID.") ]
+   uint32 RID;
 };
 
