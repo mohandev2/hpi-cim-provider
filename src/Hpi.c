@@ -14,11 +14,17 @@
  *
  */
 
+/* Name of this provider */
+static char _CLASSNAME[] = "Hpi";
+ 
 /* Include the required CMPI macros, data types, and API function headers */
 #include "cmpidt.h"
 #include "cmpift.h"
 #include "cmpimacs.h"
 #include "SaHpi.h"
+
+/* NULL terminated list of key property names for this class */
+static char * _KEYNAMES[] = {"RID", NULL};
 
 /* Simple logging facility, in case the standard SBLIM _OSBASE_TRACE() isn't available */
 #ifndef _OSBASE_TRACE
@@ -34,9 +40,6 @@ void _logstderr(char *fmt,...)
 }
 #endif
 
-/* Only needed by this provider for kill() */
-#include <signal.h>
-
 static struct hpi_handle {
         SaHpiSessionIdT sid;
 } hpi_hnd;
@@ -44,9 +47,6 @@ static struct hpi_handle {
 
 /* Handle to the CIM broker. This is initialized by the CIMOM when the provider is loaded */
 static CMPIBroker * _BROKER;
-
-/* Name of this provider */
-static char * _PROVIDER = "HpiProvider";
 
 
 /* ---------------------------------------------------------------------------
@@ -69,13 +69,13 @@ static CMPIStatus EnumInstanceNames(
         SaErrorT error;
         SaHpiEntryIdT next = SAHPI_FIRST_ENTRY;
 
-        _OSBASE_TRACE(1,("%s:EnumInstanceNames() called", _PROVIDER));
+        _OSBASE_TRACE(1,("%s:EnumInstanceNames() called", _CLASSNAME));
 
         /* Create a new template object path for returning results */
         objectpath = CMNewObjectPath(_BROKER, namespace, classname, &status);
         if (status.rc != CMPI_RC_OK) {
                 _OSBASE_TRACE(1,("%s:EnumInstanceNames() : Failed to create new object path - %s",
-                              _PROVIDER, CMGetCharPtr(status.msg)));
+                              _CLASSNAME, CMGetCharPtr(status.msg)));
                 CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to create new object path");
         }
 
@@ -86,7 +86,7 @@ static CMPIStatus EnumInstanceNames(
                 error = saHpiRptEntryGet(hpi_hnd.sid, current, &next, &entry);
 
                 if (error) {
-                        _OSBASE_TRACE(1,("%s:EnumInstanceNames() : Failed to get HPI data", _PROVIDER));
+                        _OSBASE_TRACE(1,("%s:EnumInstanceNames() : Failed to get HPI data", _CLASSNAME));
                         CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to get HPI data");
                 }
                 
@@ -99,7 +99,7 @@ static CMPIStatus EnumInstanceNames(
 
         /* Finished EnumInstanceNames */
         CMReturnDone(results);
-        _OSBASE_TRACE(1,("%s:EnumInstanceNames() %s", _PROVIDER, (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+        _OSBASE_TRACE(1,("%s:EnumInstanceNames() %s", _CLASSNAME, (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
         return status;
 }
 
@@ -121,14 +121,14 @@ static CMPIStatus EnumInstances(
         SaErrorT error;
         SaHpiEntryIdT next = SAHPI_FIRST_ENTRY;
 
-        _OSBASE_TRACE(1,("%s:EnumInstances() called", _PROVIDER));
+        _OSBASE_TRACE(1,("%s:EnumInstances() called", _CLASSNAME));
 
         /* Create a new template instance for returning results */
         /* NB - we create a CIM instance from an existing CIM object path */
         instance = CMNewInstance(_BROKER, CMNewObjectPath(_BROKER, namespace, classname, &status), &status);
         if (status.rc != CMPI_RC_OK) {
                 _OSBASE_TRACE(1,("%s:EnumInstances() : Failed to create new instance - %s",
-                              _PROVIDER, CMGetCharPtr(status.msg)));
+                              _CLASSNAME, CMGetCharPtr(status.msg)));
                 CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to create new instance");
         }
    
@@ -139,7 +139,7 @@ static CMPIStatus EnumInstances(
                 error = saHpiRptEntryGet(hpi_hnd.sid, current, &next, &entry);
         
                 if (error) {
-                        _OSBASE_TRACE(1,("%s:EnumInstanceNames() : Failed to get HPI data", _PROVIDER));
+                        _OSBASE_TRACE(1,("%s:EnumInstanceNames() : Failed to get HPI data", _CLASSNAME));
                         CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to get HPI data");
                 }
                 
@@ -154,7 +154,7 @@ static CMPIStatus EnumInstances(
 
         /* Finished EnumInstances */
         CMReturnDone(results);
-        _OSBASE_TRACE(1,("%s:EnumInstances() %s", _PROVIDER, (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+        _OSBASE_TRACE(1,("%s:EnumInstances() %s", _CLASSNAME, (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
         return status;
 }
 
@@ -179,14 +179,14 @@ static CMPIStatus GetInstance(
         CMPIData ridData;       /* Desired RID datum from the reference object path */
         SaHpiResourceIdT rid, next_rid;      /* Desired RID extracted from ridData */
 
-        _OSBASE_TRACE(1,("%s:GetInstance() called", _PROVIDER));
+        _OSBASE_TRACE(1,("%s:GetInstance() called", _CLASSNAME));
 
         /* Get the desired process RID from the reference object path */
         /* NB - CMGetKey() returns a CMPIData object which is an encapsulated CMPI data type, not a raw integer */
         ridData = CMGetKey(reference, "RID", &status);
         if (status.rc != CMPI_RC_OK || CMIsNullValue(ridData)) {
                 _OSBASE_TRACE(1,("%s:GetInstance() : Cannot determine desired HPI resource - %s",
-                              _PROVIDER, CMGetCharPtr(status.msg)));
+                              _CLASSNAME, CMGetCharPtr(status.msg)));
                 CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Cannot determine desired HPI resource");
         }
         rid = ridData.value.uint32;
@@ -196,13 +196,13 @@ static CMPIStatus GetInstance(
         instance = CMNewInstance(_BROKER, CMNewObjectPath(_BROKER, namespace, classname, &status), &status);
         if (status.rc != CMPI_RC_OK) {
                 _OSBASE_TRACE(1,("%s:GetInstance(): : Failed to create new instance - %s",
-                              _PROVIDER, CMGetCharPtr(status.msg)));
+                              _CLASSNAME, CMGetCharPtr(status.msg)));
                 CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to create new instance");
         }
         
         error = saHpiRptEntryGet(hpi_hnd.sid, rid, &next_rid, &resource);
         if (error) {
-                _OSBASE_TRACE(1,("%s:GetInstance() : Failed to get HPI data", _PROVIDER));
+                _OSBASE_TRACE(1,("%s:GetInstance() : Failed to get HPI data", _CLASSNAME));
                 CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to get HPI data");
         }
 
@@ -213,7 +213,7 @@ static CMPIStatus GetInstance(
       
         /* Finished */
         CMReturnDone(results);
-        _OSBASE_TRACE(1,("%s:GetInstance() %s", _PROVIDER, (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+        _OSBASE_TRACE(1,("%s:GetInstance() %s", _CLASSNAME, (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
         return status;
 }
 
@@ -226,11 +226,16 @@ static CMPIStatus SetInstance(
 		CMPIObjectPath * reference,	/* [in] Contains the CIM namespace, classname and desired object path */
 		CMPIInstance * newinstance)	/* [in] Contains all the new instance data */
 {
-   _OSBASE_TRACE(1,("%s:SetInstance() called", _PROVIDER));
-
-   /* We cannot modify processes programmatically */
-   _OSBASE_TRACE(1,("%s:SetInstance() failed", _PROVIDER));
-   CMReturn(CMPI_RC_ERR_NOT_SUPPORTED);
+        CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};	/* Return status of CIM operations */
+   
+        _OSBASE_TRACE(1,("%s:SetInstance() called", self->ft->miName));
+  
+        /* Modifying existing instances is not supported for this class */
+ 
+        /* Finished */
+        _OSBASE_TRACE(1,("%s:SetInstance() %s",
+                      self->ft->miName, (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+        return status;
 }
 
 
@@ -242,11 +247,18 @@ static CMPIStatus CreateInstance(
 		CMPIObjectPath * reference,	/* [in] Contains the CIM namespace, classname and desired object path */
 		CMPIInstance * newinstance)	/* [in] Contains all the new instance data */
 {
-   _OSBASE_TRACE(1,("%s:CreateInstance() called", _PROVIDER));
+        CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};	/* Return status of CIM operations */
+   
+        _OSBASE_TRACE(1,("%s:CreateInstance() called", self->ft->miName));
 
-   /* We cannot create new processes programmatically */
-   _OSBASE_TRACE(1,("%s:CreateInstance() failed", _PROVIDER));
-   CMReturn(CMPI_RC_ERR_NOT_SUPPORTED);
+        /* Creating new instances is not supported for this class */
+  
+        /* Finished */
+        CMReturnDone(results);
+
+        _OSBASE_TRACE(1,("%s:CreateInstance() %s",
+                      self->ft->miName, (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+        return status;
 }
 
 
@@ -257,35 +269,18 @@ static CMPIStatus DeleteInstance(
 		CMPIResult * results,		/* [out] Results of this operation */
 		CMPIObjectPath * reference)	/* [in] Contains the CIM namespace, classname and desired object path */
 {
-   /* Commonly needed vars */
-   CMPIStatus status = {CMPI_RC_OK, NULL};	/* Return status of CIM operations */
-#if 0                                                                                                                               
-   /* Custom vars for SimpleProcess */
-   CMPIData pidData;				/* Desired PID datum from the reference object path */
-   unsigned long pid;				/* Desired PID extracted from pidData */
+        CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};	/* Return status of CIM operations */
+   
+        _OSBASE_TRACE(1,("%s:CreateInstance() called", self->ft->miName));
 
-   _OSBASE_TRACE(1,("%s:DeleteInstance() called", _PROVIDER));
+        /* Creating new instances is not supported for this class */
+  
+        /* Finished */
+        CMReturnDone(results);
 
-   /* Get the desired process PID from the reference object path */
-   /* NB - CMGetKey() returns a CMPIData object which is an encapsulated CMPI data type, not a raw integer */
-   pidData = CMGetKey(reference, "PID", &status);
-   if (status.rc != CMPI_RC_OK || CMIsNullValue(pidData)) {
-      _OSBASE_TRACE(1,("%s:DeleteInstance() : Cannot determine desired process - %s", _PROVIDER, CMGetCharPtr(status.msg)));
-      CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Cannot determine desired process");
-   }
-   pid = pidData.value.uint32;
-
-   /* 'Delete' the desired process by kill()'ing it! */
-   /* NB - we're being lazy here and not first checking that desired process actually exists! */  
-   if (kill(pid, SIGKILL) != 0) {
-      _OSBASE_TRACE(1,("%s:DeleteInstance() : Failed to kill process PID=%u", _PROVIDER, pid));
-      CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to kill process");
-   }
-#endif 
-   /* Finished */
-   CMReturnDone(results);
-   _OSBASE_TRACE(1,("%s:DeleteInstance() %s", _PROVIDER, (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
-   return status;
+        _OSBASE_TRACE(1,("%s:CreateInstance() %s",
+                      self->ft->miName, (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+        return status;
 }
 
 
@@ -298,10 +293,10 @@ static CMPIStatus ExecQuery(
 		char * language,		/* [in] Name of the query language (e.g. "WQL") */ 
 		char * query)			/* [in] Text of the query, written in the query language */ 
 {
-   _OSBASE_TRACE(1,("%s:ExecQuery() called", _PROVIDER));
+   _OSBASE_TRACE(1,("%s:ExecQuery() called", _CLASSNAME));
 
    /* Not implemented, yet... */
-   _OSBASE_TRACE(1,("%s:ExecQuery() failed", _PROVIDER));
+   _OSBASE_TRACE(1,("%s:ExecQuery() failed", _CLASSNAME));
    CMReturn(CMPI_RC_ERR_NOT_SUPPORTED);
 }
 
@@ -311,12 +306,12 @@ static CMPIStatus Cleanup(
 		CMPIInstanceMI * self,		/* [in] Handle to this provider (i.e. 'self') */
 		CMPIContext * context)		/* [in] Additional context info, if any */
 {
-   _OSBASE_TRACE(1,("%s:Cleanup() called", _PROVIDER));
+   _OSBASE_TRACE(1,("%s:Cleanup() called", _CLASSNAME));
 
    saHpiSessionClose(hpi_hnd.sid);
    
    /* Nothing needs to be done */
-   _OSBASE_TRACE(1,("%s:Cleanup() succeeded", _PROVIDER));
+   _OSBASE_TRACE(1,("%s:Cleanup() succeeded", _CLASSNAME));
    CMReturn(CMPI_RC_OK);
 }
 
@@ -327,23 +322,23 @@ static void Initialize(
 {
         SaErrorT error = SA_OK;
    
-        _OSBASE_TRACE(1,("%s:Initialize() called", _PROVIDER));   
+        _OSBASE_TRACE(1,("%s:Initialize() called", _CLASSNAME));   
    
         error = saHpiSessionOpen(SAHPI_UNSPECIFIED_DOMAIN_ID, &(hpi_hnd.sid), 0);
         if (error) {
                 hpi_hnd.sid = 0;
-                _OSBASE_TRACE(1,("%s:Initialize() failed", _PROVIDER));
+                _OSBASE_TRACE(1,("%s:Initialize() failed", _CLASSNAME));
                 return;
         }
         
         error = saHpiDiscover(hpi_hnd.sid);
         if (error) {
-                _OSBASE_TRACE(1,("%s:Initialize() failed", _PROVIDER));
+                _OSBASE_TRACE(1,("%s:Initialize() failed", _CLASSNAME));
                 return;
         }
         
         /* Nothing needs to be done */
-        _OSBASE_TRACE(1,("%s:Initialize() succeeded", _PROVIDER));
+        _OSBASE_TRACE(1,("%s:Initialize() succeeded", _CLASSNAME));
 }
 
 
