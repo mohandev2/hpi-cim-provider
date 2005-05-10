@@ -17,4 +17,4 @@ providerdir = @PROVIDERDIR@
 provider_LTLIBRARIES = libHpi.la
 libHpi_la_SOURCES = Hpi.c
 
-libHpi_la_LDFLAGS   = -lopenhpi -version-info @HPI_CIM_VERSION@ 
+libHpi_la_LDFLAGS   = -lopenhpi -lopenhpiutils -version-info @HPI_CIM_VERSION@ 
