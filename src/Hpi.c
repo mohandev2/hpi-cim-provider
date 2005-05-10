@@ -366,7 +366,7 @@ static void Initialize(
      when the provider is loaded. 
    - 4th param specified the the provider's initialization function to be called immediately after
      loading the provider. Specify "CMNoHook" if not required. */
-CMInstanceMIStub( , CWS_ProcessProvider, _BROKER, Initialize(_BROKER));
+CMInstanceMIStub( , HpiProvider, _BROKER, Initialize(_BROKER));
 
 /* If no special initialization is required then remove the Initialize() function and use:
 CMInstanceMIStub( , CWS_ProcessProvider, _BROKER, CMNoHook);
