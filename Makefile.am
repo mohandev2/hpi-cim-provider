@@ -56,8 +56,8 @@ doc_DATA=README AUTHORS COPYING
 MOFS=mofs/Hpi.mof
 
 # LIST ALL THE CIMOM-SPECIFIC CLASS REGISTRATION DATA FILES HERE
-REGISTRATIONS=mofs/HpiRegister.mof
-REGISTRATIONS.pegasus=mofs/HpiRegister.mof
+REGISTRATIONS=mofs/Hpi.registration
+REGISTRATIONS.pegasus=mofs/Hpi.registration
 
 # Register the provider(s) and class definition(s) to the current CIM server/CIMOM
 postinstall:
