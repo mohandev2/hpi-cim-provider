@@ -61,10 +61,10 @@ REGISTRATIONS.pegasus=mofs/HpiRegister.mof
 
 # Register the provider(s) and class definition(s) to the current CIM server/CIMOM
 postinstall:
-	test x"$(MOFS)" != x && \
-		sh provider-register.sh -t @CIMSERVER@ -s $(MOFS)
-	test x"$(REGISTRATIONS.@CIMSERVER@)" != x && \
-		sh provider-register.sh -t @CIMSERVER@ -r $(REGISTRATIONS.@CIMSERVER@)
+	sh provider-register.sh -t @CIMSERVER@ -r $(REGISTRATIONS) -m $(MOFS)
+
+preuninstall:
+	sh provider-register.sh -d -t @CIMSERVER@ -r $(REGISTRATIONS) -m $(MOFS)
 
 # Explicity add all the schema files to the distribution package
 pkgdata_DATA=$(MOFS) $(REGISTRATIONS)
