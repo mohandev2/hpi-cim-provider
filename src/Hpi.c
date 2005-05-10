@@ -294,11 +294,18 @@ static CMPIStatus ExecQuery(
 		char * language,		/* [in] Name of the query language (e.g. "WQL") */ 
 		char * query)			/* [in] Text of the query, written in the query language */ 
 {
-   _OSBASE_TRACE(1,("%s:ExecQuery() called", _CLASSNAME));
+        CMPIStatus status = {CMPI_RC_ERR_NOT_SUPPORTED, NULL};	/* Return status of CIM operations */
+        
+        _OSBASE_TRACE(1,("%s:ExecQuery() called", self->ft->miName));
+        
+        /* Query filtering is not supported for this class */                                                                                                                         
+        /* Finished */
+        CMReturnDone(results);
 
-   /* Not implemented, yet... */
-   _OSBASE_TRACE(1,("%s:ExecQuery() failed", _CLASSNAME));
-   CMReturn(CMPI_RC_ERR_NOT_SUPPORTED);
+        /* Not implemented, yet... */
+        _OSBASE_TRACE(1,("%s:ExecQuery() %s",
+                      self->ft->miName, (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+        return status;
 }
 
 
@@ -307,13 +314,16 @@ static CMPIStatus Cleanup(
 		CMPIInstanceMI * self,		/* [in] Handle to this provider (i.e. 'self') */
 		CMPIContext * context)		/* [in] Additional context info, if any */
 {
-   _OSBASE_TRACE(1,("%s:Cleanup() called", _CLASSNAME));
-
-   saHpiSessionClose(hpi_hnd.sid);
+        CMPIStatus status = {CMPI_RC_OK, NULL};	/* Return status of CIM operations */
    
-   /* Nothing needs to be done */
-   _OSBASE_TRACE(1,("%s:Cleanup() succeeded", _CLASSNAME));
-   CMReturn(CMPI_RC_OK);
+        _OSBASE_TRACE(1,("%s:Cleanup() called", self->ft->miName));
+   
+        /* Nothing needs to be done for cleanup */
+   
+        /* Finished */
+
+        _OSBASE_TRACE(1,("%s:Cleanup() %s", self->ft->miName, (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
+        return status;
 }
 
 
