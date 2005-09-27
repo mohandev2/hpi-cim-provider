@@ -205,7 +205,7 @@ AC_DEFUN([MY_CHECK_FAIL],
 		MY_MSG=`echo -e "$MY_MSG\n- $4"`
 	fi
 	if test "x$2" != "x"; then
-		MY_MSG=`echo -e "$MY_MSG\n- Try installing the $2 package\n"`
+		MY_MSG=`echo -e "$MY_MSG\n- Try installing the $2 package or set PKG_CONFIG_PATH\n- to where the $2.pc file is located\n"`
 	fi
 	if test "x$3" != "x"; then
 	        MY_MSG=`echo -e "$MY_MSG\n- or get the latest software from $3\n"`

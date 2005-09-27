@@ -1,5 +1,8 @@
-[Description ("HPI Resource information"),
- Provider("cmpi:Hpi") ]
+[
+Description ("HPI Resource information"),
+Provider("cmpi:Hpi")
+]
+
 class Hpi : CIM_ManagedElement
 {
    [Key, Description ("Resource ID.") ]

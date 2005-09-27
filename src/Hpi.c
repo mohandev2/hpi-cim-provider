@@ -17,6 +17,8 @@
 
 /* Name of this provider */
 static char _CLASSNAME[] = "Hpi";
+
+#define CMPI_VERSION 90
  
 /* Include the required CMPI macros, data types, and API function headers */
 #include "cmpidt.h"
