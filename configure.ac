@@ -21,7 +21,7 @@ fi
 # ADD CHECKS FOR ANY SPECIAL REQUIRED HEADER FILES HERE
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h])
 
-OPENHPI_CFLAGS=`pkg-config --cflags openhpi 2>/dev/null`
+OPENHPI_CFLAGS=`PKG_CONFIG_PATH="/usr/local/lib/pkgconfig" pkg-config --cflags openhpi 2>/dev/null`
 if test -z "$OPENHPI_CFLAGS"; then
     MY_CHECK_FAIL(openhpi,openhpi,http://openhpi.sf.net)
 fi
