@@ -1,6 +1,6 @@
 [
 Description ("HPI Resource information"),
-Provider("cmpi:Hpi")
+Provider("cmpi:HPI_ManagedElementProvider")
 ]
 
 class HPI_ManagedElement : CIM_ManagedElement

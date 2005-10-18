@@ -359,7 +359,7 @@ function sfcb_install()
       then 
 	  mofmode=0
 	  shift
-	  baseregname=`basename -$1 .registration`
+	  baseregname=`basename $1 .registration`
 	  continue
       fi
       if test $mofmode == 1
@@ -406,7 +406,7 @@ function sfcb_uninstall()
       if test $1 == ":"
       then 
 	  shift
-	  baseregname=`basename -$1 .registration`
+	  baseregname=`basename $1 .registration`
 	  break
       fi
       mymofs="$mymofs `basename $1`"
