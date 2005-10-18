@@ -35,7 +35,7 @@ doc_DATA=README AUTHORS COPYING
 #EXTRA_DIST+=doc
 
 # providerdir defines where provider libraries will be installed (@PROVIDERDIR@ is set by the configure script). 
-#providerdir = @PROVIDERDIR@
+providerdir = @PROVIDERDIR@
 
 # ==================================================================
 # Automake instructions for ./src subdir
@@ -44,8 +44,8 @@ doc_DATA=README AUTHORS COPYING
 
 # LIST EACH CMPI CLASS PROVIDER LIBRARY, ITS SOURCE FILE(S), AND ANY LIBS REQUIRED FOR LINKING HERE
 # Files and Directories CMPI provider libraries
-#provider_LTLIBRARIES = libHpiCimProvider.la
-#libHpiCimProvider_la_SOURCES = src/HpiCimProvider.c
+provider_LTLIBRARIES = libHpiCimProvider.la
+libHpiCimProvider_la_SOURCES = src/Hpi.c
 
 # ==================================================================
 # Automake instructions for ./schema subdir

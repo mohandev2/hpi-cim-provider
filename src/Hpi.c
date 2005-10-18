@@ -16,7 +16,7 @@
  */
 
 /* Name of this provider */
-static char _CLASSNAME[] = "Hpi";
+static char _CLASSNAME[] = "HPI_ManagedElement";
 
 #define CMPI_VERSION 90
  
@@ -125,6 +125,8 @@ static CMPIStatus EnumInstances(
         SaHpiEntryIdT next = SAHPI_FIRST_ENTRY;
 
         _OSBASE_TRACE(1,("%s:EnumInstances() called", _CLASSNAME));
+
+pritnf("\n\n%s:EnumInstances() called..............!!!!!!!!!!!!!!!!!!\n\n", _CLASSNAME);
 
         /* Create a new template instance for returning results */
         /* NB - we create a CIM instance from an existing CIM object path */
