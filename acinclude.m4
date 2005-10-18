@@ -24,6 +24,19 @@ dnl the HAVE_PEGASUS_2_3_2
 dnl flag 
 dnl
 
+AC_DEFUN([CHECK_OPENHPI_HEADERS],
+	[
+	AC_MSG_CHECKING(for OpenHPI header files)
+	OPENHPI_CFLAGS=`PKG_CONFIG_PATH="/usr/local/lib/pkgconfig" pkg-config --cflags openhpi 2>/dev/null`
+	if test -z "$OPENHPI_CFLAGS"; then
+		AC_MSG_RESULT(no)
+		MY_CHECK_FAIL(openhpi,openhpi,http://openhpi.sf.net)
+	else
+		AC_MSG_RESULT(yes)
+	fi
+	]
+)
+
 AC_DEFUN([CHECK_PEGASUS_2_3_2],
 	[
 	AC_MSG_CHECKING(for Pegasus 2.3.2)
@@ -95,7 +108,6 @@ dnl
 AC_DEFUN([CHECK_CMPI],
 	[
 	AC_MSG_CHECKING(for CMPI headers)
-        CMPI_CPP_FLAGS="$CPPFLAGS"
 	dnl Check just with the standard include paths
 	_CHECK_CMPI(standard)
 	if test "$have_CMPI" == "yes"; then
@@ -119,14 +131,13 @@ AC_DEFUN([CHECK_CMPI],
 		  	dnl Found it
 		  	AC_MSG_RESULT(yes)
 			dnl Save the new -I parameter  
-			CMPI_CPP_FLAGS="$CPPFLAGS"
-			CMPI_FLAGS="-I$_include_CMPI"
+			CMPI_CFLAGS="-I$_include_CMPI"
 			break
 		 fi
 	         CPPFLAGS=$_cppflags
 	  done
 	fi	
-	CPPFLAGS="$CMPI_CPP_FLAGS"	
+	
 	if test "$have_CMPI" == "no"; then
 		AC_MSG_ERROR(no. Sorry cannot find CMPI headers files.)
 	fi
