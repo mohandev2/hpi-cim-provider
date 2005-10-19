@@ -15,7 +15,7 @@ providerdir = @PROVIDERDIR@
 
 # LIST EACH CMPI CLASS PROVIDER LIBRARY, ITS SOURCE FILE(S), AND ANY LIBS REQUIRED FORLINKING HERE
 # Files and Directories CMPI provider libraries
-provider_LTLIBRARIES = libHpiCimProvider.la
-libHpiCimProvider_la_SOURCES = HpiCimProvider.c
+provider_LTLIBRARIES = libHpi.la
+libHpi_la_SOURCES = Hpi.c
 
-libHpiCimProvider_la_LDFLAGS   = @OPENHPI_LIBS@ -version-info @HPI_CIM_VERSION@ 
+libHpi_la_LDFLAGS   = @OPENHPI_LIBS@ -version-info @HPI_CIM_VERSION@ 

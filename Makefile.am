@@ -20,7 +20,9 @@ EXTRA_DIST=
 # We must explicity add the RPM spec file to the distribution package
 EXTRA_DIST+=hpi-cim.spec
 
-SUBDIRS = src
+#SUBDIRS = src
+AM_CFLAGS 	= @CFLAGS@
+INCLUDES	= @OPENHPI_CFLAGS@ @CMPI_CFLAGS@
 
 # ==================================================================
 # Automake instructions for documentation
@@ -35,7 +37,7 @@ doc_DATA=README AUTHORS COPYING
 #EXTRA_DIST+=doc
 
 # providerdir defines where provider libraries will be installed (PROVIDERDIR is set by the configure script). 
-##providerdir = @PROVIDERDIR@
+providerdir = @PROVIDERDIR@
 
 # ==================================================================
 # Automake instructions for ./src subdir
@@ -44,8 +46,9 @@ doc_DATA=README AUTHORS COPYING
 
 # LIST EACH CMPI CLASS PROVIDER LIBRARY, ITS SOURCE FILE(S), AND ANY LIBS REQUIRED FOR LINKING HERE
 # Files and Directories CMPI provider libraries
-#provider_LTLIBRARIES = libHpiCimProvider.la
-#libHpiCimProvider_la_SOURCES = src/Hpi.c
+provider_LTLIBRARIES = libHPI_ManagedElement.la
+libHPI_ManagedElement_la_SOURCES = src/Hpi.c
+libHPI_ManagedElement_la_LDFLAGS = @OPENHPI_LIBS@ -version-info @HPI_CIM_VERSION@
 
 # ==================================================================
 # Automake instructions for ./schema subdir
