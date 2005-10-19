@@ -75,7 +75,7 @@ echo "CPPFLAGS:" $CPPFLAGS
 echo "-------------------------------------------------------"
 
 # CHANGE THIS TO THE NAME OF THE RPM SPEC FILE
-AC_CONFIG_FILES([hpi-cim.spec Makefile src/Makefile])
+AC_CONFIG_FILES([hpi-cim.spec Makefile])
 
 # Generate configure scripts for the Makefile
 AC_OUTPUT
