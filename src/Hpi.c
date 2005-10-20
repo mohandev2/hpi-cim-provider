@@ -24,7 +24,8 @@ static char _CLASSNAME[] = "HPI_ManagedElement";
 #include "cmpidt.h"
 #include "cmpift.h"
 #include "cmpimacs.h"
-#include "SaHpi.h"
+//#include "/usr/local/include/openhpi/SaHpi.h"
+#include <SaHpi.h>
 
 /* NULL terminated list of key property names for this class */
 static char * _KEYNAMES[] = {"RID", NULL};
@@ -126,7 +127,7 @@ static CMPIStatus EnumInstances(
 
         _OSBASE_TRACE(1,("%s:EnumInstances() called", _CLASSNAME));
 
-pritnf("\n\n%s:EnumInstances() called..............!!!!!!!!!!!!!!!!!!\n\n", _CLASSNAME);
+printf("\n\n%s:EnumInstances() called..............!!!!!!!!!!!!!!!!!!\n\n", _CLASSNAME);
 
         /* Create a new template instance for returning results */
         /* NB - we create a CIM instance from an existing CIM object path */
@@ -370,7 +371,7 @@ static void Initialize(
      when the provider is loaded. 
    - 4th param specified the the provider's initialization function to be called immediately after
      loading the provider. Specify "CMNoHook" if not required. */
-CMInstanceMIStub( , HpiProvider, _BROKER, Initialize(_BROKER));
+CMInstanceMIStub( , HPI_ManagedElementProvider, _BROKER, Initialize(_BROKER));
 
 /* If no special initialization is required then remove the Initialize() function and use:
 CMInstanceMIStub( , CWS_ProcessProvider, _BROKER, CMNoHook);
