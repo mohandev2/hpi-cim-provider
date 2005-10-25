@@ -3,9 +3,9 @@ Description ("HPI Resource information"),
 Provider("cmpi:HPI_ManagedElementProvider")
 ]
 
-class HPI_ManagedElement : CIM_ManagedElement
+class HPI_ManagedElement : CIM_LogicalElement
 {
-   [Description ("Resource ID.") ]
+   [Key, Description ("Resource ID.") ]
    uint32 RID;
 };
 

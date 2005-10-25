@@ -30,6 +30,8 @@ static char _CLASSNAME[] = "HPI_ManagedElement";
 /* NULL terminated list of key property names for this class */
 static char * _KEYNAMES[] = {"RID", NULL};
 
+char DeviceID[] = "Farfegnugen";
+
 /* Simple logging facility, in case the standard SBLIM _OSBASE_TRACE() isn't available */
 #ifndef _OSBASE_TRACE
 #include <stdarg.h>
@@ -75,18 +77,21 @@ static CMPIStatus EnumInstanceNames(
 
         _OSBASE_TRACE(1,("%s:EnumInstanceNames() called", _CLASSNAME));
 
-        /* Create a new template object path for returning results */
-        objectpath = CMNewObjectPath(_BROKER, namespace, classname, &status);
-        if (status.rc != CMPI_RC_OK) {
-                _OSBASE_TRACE(1,("%s:EnumInstanceNames() : Failed to create new object path - %s",
-                              _CLASSNAME, CMGetCharPtr(status.msg)));
-                CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to create new object path");
-        }
 
         do {
                 SaHpiRptEntryT entry;
                 SaHpiEntryIdT current = next;
-                
+
+                /* Create a new template object path for returning results */
+                objectpath = CMNewObjectPath(_BROKER, namespace, classname, &status);
+                if (status.rc != CMPI_RC_OK) {
+                        _OSBASE_TRACE(1,("%s:EnumInstanceNames() : Failed to create new object path - %s",
+                                      _CLASSNAME, CMGetCharPtr(status.msg)));
+                        CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to create new object path");
+                }
+
+
+                memset(&entry, 0, sizeof(entry));
                 error = saHpiRptEntryGet(hpi_hnd.sid, current, &next, &entry);
 
                 if (error) {
@@ -96,6 +101,10 @@ static CMPIStatus EnumInstanceNames(
                 
                 /* Resource ID uniquely identifies HPI Resources. Enough to enumerate instance "name" */
                 CMAddKey(objectpath, "RID", (CMPIValue *)&entry.ResourceId, CMPI_uint32);
+                CMAddKey(objectpath, "DeviceID", (CMPIValue *)DeviceID, CMPI_chars);
+                CMAddKey(objectpath, "SystemCreationClassName", (CMPIValue *)"Linux_ComputerSystem", CMPI_chars);
+                CMAddKey(objectpath, "SystemName", (CMPIValue *)"Laptop", CMPI_chars);
+                CMAddKey(objectpath, "CreationClassName", (CMPIValue *)"HPI_ManagedElement", CMPI_chars);
                 /* Add the object path for this resource to the list of results */
                 CMReturnObjectPath(results, objectpath);
                 
@@ -129,18 +138,21 @@ static CMPIStatus EnumInstances(
 
 printf("\n\n%s:EnumInstances() called..............!!!!!!!!!!!!!!!!!!\n\n", _CLASSNAME);
 
-        /* Create a new template instance for returning results */
-        /* NB - we create a CIM instance from an existing CIM object path */
-        instance = CMNewInstance(_BROKER, CMNewObjectPath(_BROKER, namespace, classname, &status), &status);
-        if (status.rc != CMPI_RC_OK) {
-                _OSBASE_TRACE(1,("%s:EnumInstances() : Failed to create new instance - %s",
-                              _CLASSNAME, CMGetCharPtr(status.msg)));
-                CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to create new instance");
-        }
-   
         do {
                 SaHpiRptEntryT entry;
                 SaHpiEntryIdT current = next;
+
+                /* Create a new template instance for returning results */
+                /* NB - we create a CIM instance from an existing CIM object path */
+                instance = CMNewInstance(_BROKER, CMNewObjectPath(_BROKER, namespace, classname, &status), &status);
+                if (status.rc != CMPI_RC_OK) {
+                        _OSBASE_TRACE(1,("%s:EnumInstances() : Failed to create new instance - %s",
+                                         _CLASSNAME, CMGetCharPtr(status.msg)));
+                        CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to create new instance");
+                }
+
+
+printf("*** IN Loop ***\n");
                 
                 error = saHpiRptEntryGet(hpi_hnd.sid, current, &next, &entry);
         
@@ -152,10 +164,18 @@ printf("\n\n%s:EnumInstances() called..............!!!!!!!!!!!!!!!!!!\n\n", _CLA
                 /* Set all the properties of the instance from the HPI data */
                 /* NB - we're being lazy here and ignore the list of desired properties and just return */
                 /* a predefined set. */
+
+printf("*** EntryId [%d] ***\n", entry.ResourceId);
+
                 CMSetProperty(instance, "RID", (CMPIValue *)&entry.ResourceId, CMPI_uint32);
                 CMSetProperty(instance, "ElementName", (CMPIValue *)entry.ResourceTag.Data, CMPI_chars);
+                CMSetProperty(instance, "DeviceID", (CMPIValue *)DeviceID, CMPI_chars);
+                CMSetProperty(instance, "SystemCreationClassName", (CMPIValue *)"Linux_ComputerSystem", CMPI_chars);
+                CMSetProperty(instance, "SystemName", (CMPIValue *)"Laptop", CMPI_chars);
+                CMSetProperty(instance, "CreationClassName", (CMPIValue *)"HPI_ManagedElement", CMPI_chars);
                 /* Add the instance for this process to the list of results */
                 CMReturnInstance(results, instance);
+
         } while (next != SAHPI_LAST_ENTRY);
 
         /* Finished EnumInstances */
@@ -282,7 +302,7 @@ static CMPIStatus DeleteInstance(
         /* Creating new instances is not supported for this class */
   
         /* Finished */
-        CMReturnDone(results);
+//        CMReturnDone(results);
 
         _OSBASE_TRACE(1,("%s:CreateInstance() %s",
                       self->ft->miName, (status.rc == CMPI_RC_OK)? "succeeded":"failed"));
@@ -338,16 +358,20 @@ static void Initialize(
 {
         SaErrorT error = SA_OK;
    
-        _OSBASE_TRACE(1,("%s:Initialize() called", _CLASSNAME));   
-   
+        _OSBASE_TRACE(1,("%s:Initialize() called", _CLASSNAME)); 
+
+printf("********** about to call saHpiSessionOpen() **********\n");
         error = saHpiSessionOpen(SAHPI_UNSPECIFIED_DOMAIN_ID, &(hpi_hnd.sid), 0);
+printf("********** returned from saHpiSessionOpen() **********\n");
         if (error) {
                 hpi_hnd.sid = 0;
                 _OSBASE_TRACE(1,("%s:Initialize() failed", _CLASSNAME));
                 return;
         }
         
+printf("********** about to call saHpiDiscover() **********\n");
         error = saHpiDiscover(hpi_hnd.sid);
+printf("********** return from saHpiDiscover() **********\n");
         if (error) {
                 _OSBASE_TRACE(1,("%s:Initialize() failed", _CLASSNAME));
                 return;
