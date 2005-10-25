@@ -10,6 +10,7 @@
 # LICENSING TERMS.
 #
 # Author:       Renier Morales, <renierm@users.sf.net>
+# Author:       David Judkovics, dmjudkov@us.ibm.com
 # Contributors:
 # Description:  Automake input file for sample CMPI process provider
 # ==================================================================
@@ -47,10 +48,10 @@ providerdir = @PROVIDERDIR@
 
 # LIST EACH CMPI CLASS PROVIDER LIBRARY, ITS SOURCE FILE(S), AND ANY LIBS REQUIRED FOR LINKING HERE
 # Files and Directories CMPI provider libraries
-provider_LTLIBRARIES = libHPI_ManagedElement.la
-libHPI_ManagedElement_la_SOURCES = src/Hpi.c
-#libHPI_ManagedElement_la_LIBADD = -lopenhpi
-libHPI_ManagedElement_la_LDFLAGS = @OPENHPI_LIBS@ -version-info @HPI_CIM_VERSION@
+provider_LTLIBRARIES = libHPI_LogicalDevice.la
+libHPI_LogicalDevice_la_SOURCES = src/Hpi.c
+#libHPI_LogicalDevice_la_LIBADD = -lopenhpi
+libHPI_LogicalDevice_la_LDFLAGS = @OPENHPI_LIBS@ -version-info @HPI_CIM_VERSION@
 
 # ==================================================================
 # Automake instructions for ./schema subdir

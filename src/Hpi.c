@@ -16,7 +16,7 @@
  */
 
 /* Name of this provider */
-static char _CLASSNAME[] = "HPI_ManagedElement";
+static char _CLASSNAME[] = "HPI_LogicalDevice";
 
 #define CMPI_VERSION 90
  
@@ -104,7 +104,7 @@ static CMPIStatus EnumInstanceNames(
                 CMAddKey(objectpath, "DeviceID", (CMPIValue *)DeviceID, CMPI_chars);
                 CMAddKey(objectpath, "SystemCreationClassName", (CMPIValue *)"Linux_ComputerSystem", CMPI_chars);
                 CMAddKey(objectpath, "SystemName", (CMPIValue *)"Laptop", CMPI_chars);
-                CMAddKey(objectpath, "CreationClassName", (CMPIValue *)"HPI_ManagedElement", CMPI_chars);
+                CMAddKey(objectpath, "CreationClassName", (CMPIValue *)"HPI_LogicalDevice", CMPI_chars);
                 /* Add the object path for this resource to the list of results */
                 CMReturnObjectPath(results, objectpath);
                 
@@ -172,7 +172,7 @@ printf("*** EntryId [%d] ***\n", entry.ResourceId);
                 CMSetProperty(instance, "DeviceID", (CMPIValue *)DeviceID, CMPI_chars);
                 CMSetProperty(instance, "SystemCreationClassName", (CMPIValue *)"Linux_ComputerSystem", CMPI_chars);
                 CMSetProperty(instance, "SystemName", (CMPIValue *)"Laptop", CMPI_chars);
-                CMSetProperty(instance, "CreationClassName", (CMPIValue *)"HPI_ManagedElement", CMPI_chars);
+                CMSetProperty(instance, "CreationClassName", (CMPIValue *)"HPI_LogicalDevice", CMPI_chars);
                 /* Add the instance for this process to the list of results */
                 CMReturnInstance(results, instance);
 
@@ -395,7 +395,7 @@ printf("********** return from saHpiDiscover() **********\n");
      when the provider is loaded. 
    - 4th param specified the the provider's initialization function to be called immediately after
      loading the provider. Specify "CMNoHook" if not required. */
-CMInstanceMIStub( , HPI_ManagedElementProvider, _BROKER, Initialize(_BROKER));
+CMInstanceMIStub( , HPI_LogicalDeviceProvider, _BROKER, Initialize(_BROKER));
 
 /* If no special initialization is required then remove the Initialize() function and use:
 CMInstanceMIStub( , CWS_ProcessProvider, _BROKER, CMNoHook);
