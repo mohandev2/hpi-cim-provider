@@ -26,6 +26,7 @@ static char _CLASSNAME[] = "HPI_LogicalDevice";
 #include "cmpift.h"
 #include "cmpimacs.h"
 #include <SaHpi.h>
+#include <oh_utils.h>
 
 /* NULL terminated list of key property names for this class */
 static char * _KEYNAMES[] = {"RID", NULL};
@@ -173,12 +174,34 @@ static CMPIStatus EnumInstances(
                 CMSetProperty(instance, "SystemName", (CMPIValue *)"Laptop", CMPI_chars);
                 CMSetProperty(instance, "CreationClassName", (CMPIValue *)"HPI_LogicalDevice", CMPI_chars);
 
+                /* SessionId */
                 printf("*** SId [%d] ***\n", hpi_hnd.sid);
                 CMSetProperty(instance, "SID", (CMPIValue *)&hpi_hnd.sid, CMPI_uint32);
+
+                /* DomainId */
                 printf("*** DId [%d] ***\n", hpi_hnd.domain_info.DomainId);
                 CMSetProperty(instance, "DID", (CMPIValue *)&hpi_hnd.domain_info.DomainId, CMPI_uint32);
+
+                /* ResourceId */
                 printf("*** RId [%d] ***\n", entry.ResourceId);
                 CMSetProperty(instance, "RID", (CMPIValue *)&entry.ResourceId, CMPI_uint32);
+
+                /* EntityPath */
+                oh_big_textbuffer bigbuf;
+                memset(&bigbuf, 0, sizeof(bigbuf));
+                error = oh_decode_entitypath(&entry.ResourceEntity, &bigbuf);
+                printf("*** EntityPath [%s] ***\n", bigbuf.Data);
+                CMSetProperty(instance, "EntityPath", (CMPIValue *)bigbuf.Data, CMPI_chars);
+
+                /* Resource Capabilities */
+                SaHpiTextBufferT buffer;
+                memset(&buffer, 0, sizeof(buffer));
+                printf("*** Capabilities [%s] ***\n", buffer.Data);
+                error = oh_decode_capabilities(entry.ResourceCapabilities, 
+                                                &buffer);
+                CMSetProperty(instance, "Capabilities", (CMPIValue *)buffer.Data, CMPI_chars);
+
+
                 /* Add the instance for this process to the list of results */
                 CMReturnInstance(results, instance);
 

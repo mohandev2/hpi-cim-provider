@@ -5,14 +5,26 @@ Provider("cmpi:HPI_LogicalDeviceProvider")
 
 class HPI_LogicalDevice : CIM_LogicalDevice
 {
-   [Description ("Resource ID.") ]
-   uint32 RID;
+	[Description ("Resource ID.") ]
+		uint32 RID;
    
-   [Description ("Domain ID.") ]
-   uint32 DID;
+	[Description ("Domain ID.") ]
+		uint32 DID;
    
-   [Description ("Session ID.") ]
-   uint32 SID;
+	[Description ("Session ID.") ]
+		uint32 SID;
+   
+       [Description ("EntityPath") ]
+		string EntityPath;
+		
+       [Description ("This definition defines the capabilities of a given"
+		"resource. One resource may support any number of "
+		"capabilities using the bit mask. Because each entry"
+		"in an RPT will have the SAHPI_CAPABILITY_RESOURCE bit set, "
+		"zero is not a valid value for the capability flag, and is "
+		"thus used to indicate no RPT entry present in some function"
+		" calls.") ]
+		string Capabilities;
 
 };
 
