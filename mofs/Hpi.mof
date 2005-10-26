@@ -5,7 +5,14 @@ Provider("cmpi:HPI_LogicalDeviceProvider")
 
 class HPI_LogicalDevice : CIM_LogicalDevice
 {
-   [Key, Description ("Resource ID.") ]
+   [Description ("Resource ID.") ]
    uint32 RID;
+   
+   [Description ("Domain ID.") ]
+   uint32 DID;
+   
+   [Description ("Session ID.") ]
+   uint32 SID;
+
 };
 

@@ -10,8 +10,9 @@
  * full licensing terms.
  *
  * Author:
- *      Renier Morales <renierm@users.sf.net>
  *      Dr. Gareth S. Bestor <bestorga@us.ibm.com>
+ *      Renier Morales <renierm@users.sf.net>
+ *      David Judkovics <djudkovi@us.ibm.com>
  *
  */
 
@@ -24,13 +25,10 @@ static char _CLASSNAME[] = "HPI_LogicalDevice";
 #include "cmpidt.h"
 #include "cmpift.h"
 #include "cmpimacs.h"
-//#include "/usr/local/include/openhpi/SaHpi.h"
 #include <SaHpi.h>
 
 /* NULL terminated list of key property names for this class */
 static char * _KEYNAMES[] = {"RID", NULL};
-
-char DeviceID[] = "Farfegnugen";
 
 /* Simple logging facility, in case the standard SBLIM _OSBASE_TRACE() isn't available */
 #ifndef _OSBASE_TRACE
@@ -48,6 +46,7 @@ void _logstderr(char *fmt,...)
 
 static struct hpi_handle {
         SaHpiSessionIdT sid;
+        SaHpiDomainInfoT domain_info;
 } hpi_hnd;
 
 
@@ -98,10 +97,12 @@ static CMPIStatus EnumInstanceNames(
                         _OSBASE_TRACE(1,("%s:EnumInstanceNames() : Failed to get HPI data", _CLASSNAME));
                         CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to get HPI data");
                 }
-                
-                /* Resource ID uniquely identifies HPI Resources. Enough to enumerate instance "name" */
-                CMAddKey(objectpath, "RID", (CMPIValue *)&entry.ResourceId, CMPI_uint32);
-                CMAddKey(objectpath, "DeviceID", (CMPIValue *)DeviceID, CMPI_chars);
+
+                char buff[64];
+                memset(buff, 0, sizeof(buff));
+                sprintf((char *)buff, "%d", entry.ResourceId);
+                CMAddKey(objectpath, "DeviceID", (CMPIValue *)buff, CMPI_chars);
+
                 CMAddKey(objectpath, "SystemCreationClassName", (CMPIValue *)"Linux_ComputerSystem", CMPI_chars);
                 CMAddKey(objectpath, "SystemName", (CMPIValue *)"Laptop", CMPI_chars);
                 CMAddKey(objectpath, "CreationClassName", (CMPIValue *)"HPI_LogicalDevice", CMPI_chars);
@@ -136,8 +137,6 @@ static CMPIStatus EnumInstances(
 
         _OSBASE_TRACE(1,("%s:EnumInstances() called", _CLASSNAME));
 
-printf("\n\n%s:EnumInstances() called..............!!!!!!!!!!!!!!!!!!\n\n", _CLASSNAME);
-
         do {
                 SaHpiRptEntryT entry;
                 SaHpiEntryIdT current = next;
@@ -151,9 +150,6 @@ printf("\n\n%s:EnumInstances() called..............!!!!!!!!!!!!!!!!!!\n\n", _CLA
                         CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to create new instance");
                 }
 
-
-printf("*** IN Loop ***\n");
-                
                 error = saHpiRptEntryGet(hpi_hnd.sid, current, &next, &entry);
         
                 if (error) {
@@ -165,14 +161,24 @@ printf("*** IN Loop ***\n");
                 /* NB - we're being lazy here and ignore the list of desired properties and just return */
                 /* a predefined set. */
 
-printf("*** EntryId [%d] ***\n", entry.ResourceId);
-
                 CMSetProperty(instance, "RID", (CMPIValue *)&entry.ResourceId, CMPI_uint32);
                 CMSetProperty(instance, "ElementName", (CMPIValue *)entry.ResourceTag.Data, CMPI_chars);
-                CMSetProperty(instance, "DeviceID", (CMPIValue *)DeviceID, CMPI_chars);
+
+                char buff[64];
+                memset(buff, 0, sizeof(buff));
+                sprintf((char *)buff, "%d", entry.ResourceId);
+                CMSetProperty(instance, "DeviceID", (CMPIValue *)buff, CMPI_chars);
+
                 CMSetProperty(instance, "SystemCreationClassName", (CMPIValue *)"Linux_ComputerSystem", CMPI_chars);
                 CMSetProperty(instance, "SystemName", (CMPIValue *)"Laptop", CMPI_chars);
                 CMSetProperty(instance, "CreationClassName", (CMPIValue *)"HPI_LogicalDevice", CMPI_chars);
+
+                printf("*** SId [%d] ***\n", hpi_hnd.sid);
+                CMSetProperty(instance, "SID", (CMPIValue *)&hpi_hnd.sid, CMPI_uint32);
+                printf("*** DId [%d] ***\n", hpi_hnd.domain_info.DomainId);
+                CMSetProperty(instance, "DID", (CMPIValue *)&hpi_hnd.domain_info.DomainId, CMPI_uint32);
+                printf("*** RId [%d] ***\n", entry.ResourceId);
+                CMSetProperty(instance, "RID", (CMPIValue *)&entry.ResourceId, CMPI_uint32);
                 /* Add the instance for this process to the list of results */
                 CMReturnInstance(results, instance);
 
@@ -360,20 +366,23 @@ static void Initialize(
    
         _OSBASE_TRACE(1,("%s:Initialize() called", _CLASSNAME)); 
 
-printf("********** about to call saHpiSessionOpen() **********\n");
         error = saHpiSessionOpen(SAHPI_UNSPECIFIED_DOMAIN_ID, &(hpi_hnd.sid), 0);
-printf("********** returned from saHpiSessionOpen() **********\n");
         if (error) {
                 hpi_hnd.sid = 0;
                 _OSBASE_TRACE(1,("%s:Initialize() failed", _CLASSNAME));
                 return;
         }
-        
-printf("********** about to call saHpiDiscover() **********\n");
-        error = saHpiDiscover(hpi_hnd.sid);
-printf("********** return from saHpiDiscover() **********\n");
+
+        error = saHpiDomainInfoGet (hpi_hnd.sid, &(hpi_hnd.domain_info));
         if (error) {
-                _OSBASE_TRACE(1,("%s:Initialize() failed", _CLASSNAME));
+                hpi_hnd.sid = 0;
+                _OSBASE_TRACE(1,("%s:saHpiDomainInfoGet() failed", _CLASSNAME));
+                return;
+        }
+
+        error = saHpiDiscover(hpi_hnd.sid);
+        if (error) {
+                _OSBASE_TRACE(1,("%s:saHpiDiscover() failed", _CLASSNAME));
                 return;
         }
         
