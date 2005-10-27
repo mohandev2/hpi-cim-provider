@@ -184,14 +184,16 @@ static CMPIStatus EnumInstances(
 
                 /* ResourceId */
                 printf("*** RId [%d] ***\n", entry.ResourceId);
-                CMSetProperty(instance, "RID", (CMPIValue *)&entry.ResourceId, CMPI_uint32);
+                CMSetProperty(instance, "RID", 
+                              (CMPIValue *)&entry.ResourceId, CMPI_uint32);
 
                 /* EntityPath */
                 oh_big_textbuffer bigbuf;
                 memset(&bigbuf, 0, sizeof(bigbuf));
                 error = oh_decode_entitypath(&entry.ResourceEntity, &bigbuf);
                 printf("*** EntityPath [%s] ***\n", bigbuf.Data);
-                CMSetProperty(instance, "EntityPath", (CMPIValue *)bigbuf.Data, CMPI_chars);
+                CMSetProperty(instance, "EntityPath", 
+                              (CMPIValue *)bigbuf.Data, CMPI_chars);
 
                 /* Resource Capabilities */
                 SaHpiTextBufferT buffer;
@@ -199,8 +201,31 @@ static CMPIStatus EnumInstances(
                 printf("*** Capabilities [%s] ***\n", buffer.Data);
                 error = oh_decode_capabilities(entry.ResourceCapabilities, 
                                                 &buffer);
-                CMSetProperty(instance, "Capabilities", (CMPIValue *)buffer.Data, CMPI_chars);
+                CMSetProperty(instance, "Capabilities", 
+                              (CMPIValue *)buffer.Data, CMPI_chars);
 
+                /* SaHpiHsCapabilitiesT */
+                memset(&buffer, 0, sizeof(buffer));
+                error = oh_decode_hscapabilities(entry.HotSwapCapabilities,
+                                                 &buffer);
+                printf("*** HotSwapCapabilities [%s] ***\n", buffer.Data);
+                CMSetProperty(instance, "HotSwapCapabilities", 
+                              (CMPIValue *)buffer.Data, CMPI_chars);
+
+                /* SaHpiSeverityT */
+                printf("*** ResourceSeverity [%s] ***\n", 
+                       oh_lookup_severity(entry.ResourceSeverity));
+                CMSetProperty(instance, "ResourceSeverity", 
+                              (CMPIValue *)oh_lookup_severity(entry.ResourceSeverity), 
+                              CMPI_chars);
+
+                /* ResourceFailed */
+                printf("*** ResourceSeverity [%s] ***\n", 
+                       (entry.ResourceFailed == SAHPI_TRUE) ? "TRUE" : "FALSE");
+                CMSetProperty(instance, "ResourceFailed", 
+                              (CMPIValue *)(entry.ResourceFailed == SAHPI_TRUE) 
+                                        ? "TRUE" : "FALSE", 
+                              CMPI_chars);
 
                 /* Add the instance for this process to the list of results */
                 CMReturnInstance(results, instance);
