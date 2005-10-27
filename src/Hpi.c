@@ -126,21 +126,24 @@ static CMPIStatus EnumInstances(
 		CMPIResult * results,		/* [out] Results of this operation */
 		CMPIObjectPath * reference,	/* [in] Contains the CIM namespace and classname */
 		char ** properties)		/* [in] List of desired properties (NULL=all) */
-{
+
+{                  
+        SaErrorT error;
+        SaHpiRptEntryT entry;
+        SaHpiEntryIdT current;
+
         /* Commonly needed vars */
         CMPIStatus status = {CMPI_RC_OK, NULL};	/* Return status of CIM operations */
         CMPIInstance * instance;			/* CIM instance of each new instance of this class */
         char * namespace = CMGetCharPtr(CMGetNameSpace(reference, NULL)); /* Our current CIM namespace */
         char * classname = CMGetCharPtr(CMGetClassName(reference, NULL)); /* Registered name of this CIM class */
         /* HPI vars */
-        SaErrorT error;
         SaHpiEntryIdT next = SAHPI_FIRST_ENTRY;
 
         _OSBASE_TRACE(1,("%s:EnumInstances() called", _CLASSNAME));
 
         do {
-                SaHpiRptEntryT entry;
-                SaHpiEntryIdT current = next;
+                current = next;
 
                 /* Create a new template instance for returning results */
                 /* NB - we create a CIM instance from an existing CIM object path */
