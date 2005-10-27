@@ -227,6 +227,10 @@ static CMPIStatus EnumInstances(
                                         ? "TRUE" : "FALSE", 
                               CMPI_chars);
 
+                /* ResourceTag */
+                CMSetProperty(instance, "ResourceTag", 
+                              (CMPIValue *)entry.ResourceTag.Data, CMPI_chars);
+
                 /* Add the instance for this process to the list of results */
                 CMReturnInstance(results, instance);
 

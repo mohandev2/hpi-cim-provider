@@ -36,6 +36,8 @@ class HPI_LogicalDevice : CIM_LogicalDevice
 	[Description ("Indicates that the resource is not currently functional")]
 		string ResourceFailed;      	
 
+	[Description ("ResourceTag")]
+		string ResourceTag;			  
 
 };
 
