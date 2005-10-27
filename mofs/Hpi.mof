@@ -13,6 +13,33 @@ class HPI_LogicalDevice : CIM_LogicalDevice
    
 	[Description ("Session ID.") ]
 		uint32 SID;
+		
+	[Description ("ResourceRev.") ]
+		uint8 ResourceRev;
+		
+	[Description ("SpecificVer.") ]
+		uint8 SpecificVer;
+    
+	[Description ("DeviceSupport.") ]
+		uint8 DeviceSupport;
+    
+	[Description ("ManufacturerId.") ]
+		uint32 ManufacturerId;
+    
+	[Description ("ProductId.") ]
+		uint16 ProductId;
+    
+	[Description ("FirmwareMajorRev.") ]
+		uint8 FirmwareMajorRev;
+    
+	[Description ("FirmwareMinorRev.") ]
+		uint8 FirmwareMinorRev;
+    
+	[Description ("AuxFirmwareRev.") ]
+		uint8 AuxFirmwareRev;
+    
+	[MaxLen (16), Description ("Guid.") ]
+		string Guid;
    
        [Description ("EntityPath") ]
 		string EntityPath;

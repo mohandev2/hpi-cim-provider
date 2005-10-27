@@ -187,6 +187,69 @@ static CMPIStatus EnumInstances(
                 CMSetProperty(instance, "RID", 
                               (CMPIValue *)&entry.ResourceId, CMPI_uint32);
 
+                /* ResourceRev */
+                printf("*** ResourceRev [%d] ***\n", 
+                       entry.ResourceInfo.ResourceRev);
+                CMSetProperty(instance, "ResourceRev", 
+                              (CMPIValue *)&entry.ResourceInfo.ResourceRev, 
+                              CMPI_uint8);
+
+                /* SpecificVer */
+                printf("*** SpecificVer [%d] ***\n", 
+                       entry.ResourceInfo.SpecificVer);
+                CMSetProperty(instance, "SpecificVer", 
+                              (CMPIValue *)&entry.ResourceInfo.SpecificVer, 
+                              CMPI_uint8);
+
+                /* DeviceSupport */
+                printf("*** DeviceSupport [%d] ***\n", 
+                       entry.ResourceInfo.DeviceSupport);
+                CMSetProperty(instance, "DeviceSupport", 
+                              (CMPIValue *)&entry.ResourceInfo.DeviceSupport, 
+                              CMPI_uint8);
+
+                /* ManufacturerId */
+                printf("*** ManufacturerId [%d] ***\n", 
+                       entry.ResourceInfo.ManufacturerId);
+                CMSetProperty(instance, "ManufacturerId", 
+                              (CMPIValue *)&entry.ResourceInfo.ManufacturerId, 
+                              CMPI_uint32);
+
+                /* ProductId */
+                printf("*** ProductId [%d] ***\n", 
+                       entry.ResourceInfo.ProductId);
+                CMSetProperty(instance, "ProductId", 
+                              (CMPIValue *)&entry.ResourceInfo.ProductId, 
+                              CMPI_uint16);
+
+                /* FirmwareMajorRev */
+                printf("*** FirmwareMajorRev [%d] ***\n", 
+                       entry.ResourceInfo.FirmwareMajorRev);
+                CMSetProperty(instance, "FirmwareMajorRev", 
+                              (CMPIValue *)&entry.ResourceInfo.FirmwareMajorRev, 
+                              CMPI_uint8);
+
+                /* FirmwareMinorRev */
+                printf("*** FirmwareMinorRev [%d] ***\n", 
+                       entry.ResourceInfo.FirmwareMinorRev);
+                CMSetProperty(instance, "FirmwareMinorRev", 
+                              (CMPIValue *)&entry.ResourceInfo.FirmwareMinorRev, 
+                              CMPI_uint8);
+
+                /* AuxFirmwareRev */
+                printf("*** AuxFirmwareRev [%d] ***\n", 
+                       entry.ResourceInfo.AuxFirmwareRev);
+                CMSetProperty(instance, "AuxFirmwareRev", 
+                              (CMPIValue *)&entry.ResourceInfo.AuxFirmwareRev, 
+                              CMPI_uint8);
+
+                /* Guid */
+                printf("*** Guid [%d] ***\n", 
+                       entry.ResourceInfo.Guid);
+                CMSetProperty(instance, "Guid", 
+                              (CMPIValue *)&entry.ResourceInfo.Guid,
+                              CMPI_chars);
+
                 /* EntityPath */
                 oh_big_textbuffer bigbuf;
                 memset(&bigbuf, 0, sizeof(bigbuf));
