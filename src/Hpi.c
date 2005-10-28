@@ -98,10 +98,18 @@ static CMPIStatus EnumInstanceNames(
                         CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to get HPI data");
                 }
 
+                oh_big_textbuffer bigbuf;
+                memset(&bigbuf, 0, sizeof(bigbuf));
+                error = oh_decode_entitypath(&entry.ResourceEntity, &bigbuf);
+                printf("*** DeviceID [%s] ***\n", bigbuf.Data);
+                CMAddKey(objectpath, "DeviceID", (CMPIValue *)bigbuf.Data, CMPI_chars);
+
+/*
                 char buff[64];
                 memset(buff, 0, sizeof(buff));
                 sprintf((char *)buff, "%d", entry.ResourceId);
                 CMAddKey(objectpath, "DeviceID", (CMPIValue *)buff, CMPI_chars);
+*/
 
                 CMAddKey(objectpath, "SystemCreationClassName", (CMPIValue *)"Linux_ComputerSystem", CMPI_chars);
                 CMAddKey(objectpath, "SystemName", (CMPIValue *)"Laptop", CMPI_chars);
@@ -164,11 +172,20 @@ static CMPIStatus EnumInstances(
                 CMSetProperty(instance, "RID", (CMPIValue *)&entry.ResourceId, CMPI_uint32);
                 CMSetProperty(instance, "ElementName", (CMPIValue *)entry.ResourceTag.Data, CMPI_chars);
 
+
+                oh_big_textbuffer bigbuf;
+                memset(&bigbuf, 0, sizeof(bigbuf));
+                error = oh_decode_entitypath(&entry.ResourceEntity, &bigbuf);
+                printf("*** DeviceID [%s] ***\n", bigbuf.Data);
+                CMSetProperty(instance, "DeviceID", 
+                              (CMPIValue *)bigbuf.Data, CMPI_chars);
+
+/*
                 char buff[64];
                 memset(buff, 0, sizeof(buff));
                 sprintf((char *)buff, "%d", entry.ResourceId);
                 CMSetProperty(instance, "DeviceID", (CMPIValue *)buff, CMPI_chars);
-
+*/
                 CMSetProperty(instance, "SystemCreationClassName", (CMPIValue *)"Linux_ComputerSystem", CMPI_chars);
                 CMSetProperty(instance, "SystemName", (CMPIValue *)"Laptop", CMPI_chars);
                 CMSetProperty(instance, "CreationClassName", (CMPIValue *)"HPI_LogicalDevice", CMPI_chars);
@@ -250,9 +267,9 @@ static CMPIStatus EnumInstances(
                               CMPI_chars);
 
                 /* EntityPath */
-                oh_big_textbuffer bigbuf;
-                memset(&bigbuf, 0, sizeof(bigbuf));
-                error = oh_decode_entitypath(&entry.ResourceEntity, &bigbuf);
+//                oh_big_textbuffer bigbuf;
+//                memset(&bigbuf, 0, sizeof(bigbuf));
+//                error = oh_decode_entitypath(&entry.ResourceEntity, &bigbuf);
                 printf("*** EntityPath [%s] ***\n", bigbuf.Data);
                 CMSetProperty(instance, "EntityPath", 
                               (CMPIValue *)bigbuf.Data, CMPI_chars);
