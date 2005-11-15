@@ -1,0 +1,16 @@
+##### for copying libs to correct sub dir #####
+sudo mv libHPI* lib/.
+
+##### wbem cmpi calls #####
+wbemein http://localhost:5988/root/cimv2:HPI_LogicalDevice
+wbemei http://localhost:5988/root/cimv2:HPI_LogicalDevice
+
+##### shutdowning down cimserver manually #####
+sudo killall -9 cimserver
+
+##### to register a mof as root #####
+provider-register.sh -t pegasus -r mofs/Hpi.registration -m mofs/Hpi.mof
+
+
+##### to un-register a mof as root #####
+provider-register.sh -d -t pegasus -r mofs/Hpi.registration -m mofs/Hpi.mof

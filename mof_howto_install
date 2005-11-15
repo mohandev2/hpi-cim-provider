@@ -1,0 +1,5 @@
+install:
+provider-register.sh -t pegasus -r mofs/Hpi.registration -m mofs/Hpi.mof
+
+uninstall:
+provider-register.sh -d -t pegasus -r mofs/Hpi.registration -m mofs/Hpi.mof
