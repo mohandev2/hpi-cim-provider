@@ -76,6 +76,8 @@ static CMPIStatus EnumInstanceNames(
 
         oh_big_textbuffer bigbuf;
 
+        char buf[1024];
+
         /* Commonly needed vars */
         CMPIStatus status = {CMPI_RC_OK, NULL};	/* Return status of CIM operations */
         CMPIObjectPath * objectpath; /* CIM object path of each new instance of this class */
@@ -111,8 +113,7 @@ static CMPIStatus EnumInstanceNames(
 
                                 memset(&bigbuf, 0, sizeof(bigbuf));
                                 error = oh_decode_entitypath(&entry.ResourceEntity, &bigbuf);
-
-                                char buf[1024];
+                                
                                 memset(buf, 0, sizeof(buf));
                                 sprintf(buf, "%s{%s}{%d}", bigbuf.Data, oh_lookup_rdrtype(rdr.RdrType), rdr.RecordId);
 
@@ -160,7 +161,14 @@ static CMPIStatus EnumInstances(
         /* HPI vars */
         SaErrorT error;
         SaHpiRptEntryT entry;
-        SaHpiEntryIdT entry_id = SAHPI_FIRST_ENTRY;;
+        SaHpiEntryIdT entry_id = SAHPI_FIRST_ENTRY;
+
+        SaHpiEntryIdT rdr_id;
+        SaHpiRdrT     rdr;
+
+        oh_big_textbuffer bigbuf;
+
+        char buf[1024];
 
         /* Commonly needed vars */
         CMPIStatus status = {CMPI_RC_OK, NULL};	/* Return status of CIM operations */
@@ -171,163 +179,179 @@ static CMPIStatus EnumInstances(
         _OSBASE_TRACE(1,("%s:EnumInstances() called", _CLASSNAME));
 
         do {
-                /* Create a new template instance for returning results */
-                /* NB - we create a CIM instance from an existing CIM object path */
-                instance = CMNewInstance(_BROKER, CMNewObjectPath(_BROKER, namespace, classname, &status), &status);
-                if (status.rc != CMPI_RC_OK) {
-                        _OSBASE_TRACE(1,("%s:EnumInstances() : Failed to create new instance - %s",
-                                         _CLASSNAME, CMGetCharPtr(status.msg)));
-                        CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to create new instance");
-                }
+
 
                 error = saHpiRptEntryGet(hpi_hnd.sid, entry_id, &entry_id, &entry);
         
-                if (error) {
+                if (error != SA_OK) {
                         _OSBASE_TRACE(1,("%s:EnumInstanceNames() : Failed to get HPI data", _CLASSNAME));
                         CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to get HPI data");
                 }
-                
-                /* Set all the properties of the instance from the HPI data */
-                /* NB - we're being lazy here and ignore the list of desired properties and just return */
-                /* a predefined set. */
 
-                CMSetProperty(instance, "RID", (CMPIValue *)&entry.ResourceId, CMPI_uint32);
-                CMSetProperty(instance, "ElementName", (CMPIValue *)entry.ResourceTag.Data, CMPI_chars);
+                rdr_id = SAHPI_FIRST_ENTRY;
+                do {
+                        memset(&rdr, 0, sizeof(rdr));
+                        error = saHpiRdrGet(hpi_hnd.sid, 
+                                            entry.ResourceId, 
+                                            rdr_id, 
+                                            &rdr_id, &rdr);
+
+                        /* Create a new template instance for returning results */
+                        /* NB - we create a CIM instance from an existing CIM object path */
+                        instance = CMNewInstance(_BROKER, CMNewObjectPath(_BROKER, namespace, classname, &status), &status);
+                        if (status.rc != CMPI_RC_OK) {
+                                _OSBASE_TRACE(1,("%s:EnumInstances() : Failed to create new instance - %s",
+                                                 _CLASSNAME, CMGetCharPtr(status.msg)));
+                                CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to create new instance");
+                        }
+
+                        /* Set all the properties of the instance from the HPI data */
+                        /* NB - we're being lazy here and ignore the list of desired properties and just return */
+                        /* a predefined set. */
+
+                        CMSetProperty(instance, "RID", (CMPIValue *)&entry.ResourceId, CMPI_uint32);
+                        CMSetProperty(instance, "ElementName", (CMPIValue *)entry.ResourceTag.Data, CMPI_chars);
 
 
-                oh_big_textbuffer bigbuf;
-                memset(&bigbuf, 0, sizeof(bigbuf));
-                error = oh_decode_entitypath(&entry.ResourceEntity, &bigbuf);
-                printf("*** DeviceID [%s] ***\n", bigbuf.Data);
-                CMSetProperty(instance, "DeviceID", 
-                              (CMPIValue *)bigbuf.Data, CMPI_chars);
+                        memset(&bigbuf, 0, sizeof(bigbuf));
+                        error = oh_decode_entitypath(&entry.ResourceEntity, &bigbuf);
 
-                CMSetProperty(instance, "SystemCreationClassName", (CMPIValue *)"Linux_ComputerSystem", CMPI_chars);
-                CMSetProperty(instance, "SystemName", (CMPIValue *)"Laptop", CMPI_chars);
-                CMSetProperty(instance, "CreationClassName", (CMPIValue *)"HPI_LogicalDevice", CMPI_chars);
 
-                /* SessionId */
-                printf("*** SId [%d] ***\n", hpi_hnd.sid);
-                CMSetProperty(instance, "SID", (CMPIValue *)&hpi_hnd.sid, CMPI_uint32);
+                        memset(buf, 0, sizeof(buf));
+                        sprintf(buf, "%s{%s}{%d}", bigbuf.Data, oh_lookup_rdrtype(rdr.RdrType), rdr.RecordId);
 
-                /* DomainId */
-                printf("*** DId [%d] ***\n", hpi_hnd.domain_info.DomainId);
-                CMSetProperty(instance, "DID", (CMPIValue *)&hpi_hnd.domain_info.DomainId, CMPI_uint32);
+                        printf("*** DeviceID [%s] ***\n", buf);
+                        CMSetProperty(instance, "DeviceID", 
+                                      (CMPIValue *)buf, CMPI_chars);
 
-                /* ResourceId */
-                printf("*** RId [%d] ***\n", entry.ResourceId);
-                CMSetProperty(instance, "RID", 
-                              (CMPIValue *)&entry.ResourceId, CMPI_uint32);
+                        CMSetProperty(instance, "SystemCreationClassName", (CMPIValue *)"Linux_ComputerSystem", CMPI_chars);
+                        CMSetProperty(instance, "SystemName", (CMPIValue *)"Laptop", CMPI_chars);
+                        CMSetProperty(instance, "CreationClassName", (CMPIValue *)"HPI_LogicalDevice", CMPI_chars);
 
-                /* ResourceRev */
-                printf("*** ResourceRev [%d] ***\n", 
-                       entry.ResourceInfo.ResourceRev);
-                CMSetProperty(instance, "ResourceRev", 
-                              (CMPIValue *)&entry.ResourceInfo.ResourceRev, 
-                              CMPI_uint8);
+                        /* SessionId */
+                        printf("*** SId [%d] ***\n", hpi_hnd.sid);
+                        CMSetProperty(instance, "SID", (CMPIValue *)&hpi_hnd.sid, CMPI_uint32);
 
-                /* SpecificVer */
-                printf("*** SpecificVer [%d] ***\n", 
-                       entry.ResourceInfo.SpecificVer);
-                CMSetProperty(instance, "SpecificVer", 
-                              (CMPIValue *)&entry.ResourceInfo.SpecificVer, 
-                              CMPI_uint8);
+                        /* DomainId */
+                        printf("*** DId [%d] ***\n", hpi_hnd.domain_info.DomainId);
+                        CMSetProperty(instance, "DID", (CMPIValue *)&hpi_hnd.domain_info.DomainId, CMPI_uint32);
 
-                /* DeviceSupport */
-                printf("*** DeviceSupport [%d] ***\n", 
-                       entry.ResourceInfo.DeviceSupport);
-                CMSetProperty(instance, "DeviceSupport", 
-                              (CMPIValue *)&entry.ResourceInfo.DeviceSupport, 
-                              CMPI_uint8);
+                        /* ResourceId */
+                        printf("*** RId [%d] ***\n", entry.ResourceId);
+                        CMSetProperty(instance, "RID", 
+                                      (CMPIValue *)&entry.ResourceId, CMPI_uint32);
 
-                /* ManufacturerId */
-                printf("*** ManufacturerId [%d] ***\n", 
-                       entry.ResourceInfo.ManufacturerId);
-                CMSetProperty(instance, "ManufacturerId", 
-                              (CMPIValue *)&entry.ResourceInfo.ManufacturerId, 
-                              CMPI_uint32);
+                        /* ResourceRev */
+                        printf("*** ResourceRev [%d] ***\n", 
+                               entry.ResourceInfo.ResourceRev);
+                        CMSetProperty(instance, "ResourceRev", 
+                                      (CMPIValue *)&entry.ResourceInfo.ResourceRev, 
+                                      CMPI_uint8);
 
-                /* ProductId */
-                printf("*** ProductId [%d] ***\n", 
-                       entry.ResourceInfo.ProductId);
-                CMSetProperty(instance, "ProductId", 
-                              (CMPIValue *)&entry.ResourceInfo.ProductId, 
-                              CMPI_uint16);
+                        /* SpecificVer */
+                        printf("*** SpecificVer [%d] ***\n", 
+                               entry.ResourceInfo.SpecificVer);
+                        CMSetProperty(instance, "SpecificVer", 
+                                      (CMPIValue *)&entry.ResourceInfo.SpecificVer, 
+                                      CMPI_uint8);
 
-                /* FirmwareMajorRev */
-                printf("*** FirmwareMajorRev [%d] ***\n", 
-                       entry.ResourceInfo.FirmwareMajorRev);
-                CMSetProperty(instance, "FirmwareMajorRev", 
-                              (CMPIValue *)&entry.ResourceInfo.FirmwareMajorRev, 
-                              CMPI_uint8);
+                        /* DeviceSupport */
+                        printf("*** DeviceSupport [%d] ***\n", 
+                               entry.ResourceInfo.DeviceSupport);
+                        CMSetProperty(instance, "DeviceSupport", 
+                                      (CMPIValue *)&entry.ResourceInfo.DeviceSupport, 
+                                      CMPI_uint8);
 
-                /* FirmwareMinorRev */
-                printf("*** FirmwareMinorRev [%d] ***\n", 
-                       entry.ResourceInfo.FirmwareMinorRev);
-                CMSetProperty(instance, "FirmwareMinorRev", 
-                              (CMPIValue *)&entry.ResourceInfo.FirmwareMinorRev, 
-                              CMPI_uint8);
+                        /* ManufacturerId */
+                        printf("*** ManufacturerId [%d] ***\n", 
+                               entry.ResourceInfo.ManufacturerId);
+                        CMSetProperty(instance, "ManufacturerId", 
+                                      (CMPIValue *)&entry.ResourceInfo.ManufacturerId, 
+                                      CMPI_uint32);
+                        
+                        /* ProductId */
+                        printf("*** ProductId [%d] ***\n", 
+                               entry.ResourceInfo.ProductId);
+                        CMSetProperty(instance, "ProductId", 
+                                      (CMPIValue *)&entry.ResourceInfo.ProductId, 
+                                      CMPI_uint16);
 
-                /* AuxFirmwareRev */
-                printf("*** AuxFirmwareRev [%d] ***\n", 
-                       entry.ResourceInfo.AuxFirmwareRev);
-                CMSetProperty(instance, "AuxFirmwareRev", 
-                              (CMPIValue *)&entry.ResourceInfo.AuxFirmwareRev, 
-                              CMPI_uint8);
+                        /* FirmwareMajorRev */
+                        printf("*** FirmwareMajorRev [%d] ***\n", 
+                               entry.ResourceInfo.FirmwareMajorRev);
+                        CMSetProperty(instance, "FirmwareMajorRev", 
+                                      (CMPIValue *)&entry.ResourceInfo.FirmwareMajorRev, 
+                                      CMPI_uint8);
 
-                /* Guid */
-                printf("*** Guid [%d] ***\n", 
-                       entry.ResourceInfo.Guid);
-                CMSetProperty(instance, "Guid", 
-                              (CMPIValue *)&entry.ResourceInfo.Guid,
-                              CMPI_chars);
+                        /* FirmwareMinorRev */
+                        printf("*** FirmwareMinorRev [%d] ***\n", 
+                               entry.ResourceInfo.FirmwareMinorRev);
+                        CMSetProperty(instance, "FirmwareMinorRev", 
+                                      (CMPIValue *)&entry.ResourceInfo.FirmwareMinorRev, 
+                                      CMPI_uint8);
 
-                /* EntityPath */
-//                oh_big_textbuffer bigbuf;
-//                memset(&bigbuf, 0, sizeof(bigbuf));
-//                error = oh_decode_entitypath(&entry.ResourceEntity, &bigbuf);
-                printf("*** EntityPath [%s] ***\n", bigbuf.Data);
-                CMSetProperty(instance, "EntityPath", 
-                              (CMPIValue *)bigbuf.Data, CMPI_chars);
+                        /* AuxFirmwareRev */
+                        printf("*** AuxFirmwareRev [%d] ***\n", 
+                               entry.ResourceInfo.AuxFirmwareRev);
+                        CMSetProperty(instance, "AuxFirmwareRev", 
+                                      (CMPIValue *)&entry.ResourceInfo.AuxFirmwareRev, 
+                                      CMPI_uint8);
 
-                /* Resource Capabilities */
-                SaHpiTextBufferT buffer;
-                memset(&buffer, 0, sizeof(buffer));
-                printf("*** Capabilities [%s] ***\n", buffer.Data);
-                error = oh_decode_capabilities(entry.ResourceCapabilities, 
-                                                &buffer);
-                CMSetProperty(instance, "Capabilities", 
-                              (CMPIValue *)buffer.Data, CMPI_chars);
+                        /* Guid */
+                        printf("*** Guid [%d] ***\n", 
+                               entry.ResourceInfo.Guid);
+                        CMSetProperty(instance, "Guid", 
+                                      (CMPIValue *)&entry.ResourceInfo.Guid,
+                                      CMPI_chars);
 
-                /* SaHpiHsCapabilitiesT */
-                memset(&buffer, 0, sizeof(buffer));
-                error = oh_decode_hscapabilities(entry.HotSwapCapabilities,
+                        /* EntityPath */
+                        //                oh_big_textbuffer bigbuf;
+                        //                memset(&bigbuf, 0, sizeof(bigbuf));
+                        //                error = oh_decode_entitypath(&entry.ResourceEntity, &bigbuf);
+                        printf("*** EntityPath [%s] ***\n", bigbuf.Data);
+                        CMSetProperty(instance, "EntityPath", 
+                                      (CMPIValue *)bigbuf.Data, CMPI_chars);
+
+                        /* Resource Capabilities */
+                        SaHpiTextBufferT buffer;
+                        memset(&buffer, 0, sizeof(buffer));
+                        printf("*** Capabilities [%s] ***\n", buffer.Data);
+                        error = oh_decode_capabilities(entry.ResourceCapabilities, 
+                                                       &buffer);
+                        CMSetProperty(instance, "Capabilities", 
+                                      (CMPIValue *)buffer.Data, CMPI_chars);
+
+                        /* SaHpiHsCapabilitiesT */
+                        memset(&buffer, 0, sizeof(buffer));
+                        error = oh_decode_hscapabilities(entry.HotSwapCapabilities,
                                                  &buffer);
-                printf("*** HotSwapCapabilities [%s] ***\n", buffer.Data);
-                CMSetProperty(instance, "HotSwapCapabilities", 
-                              (CMPIValue *)buffer.Data, CMPI_chars);
+                        printf("*** HotSwapCapabilities [%s] ***\n", buffer.Data);
+                        CMSetProperty(instance, "HotSwapCapabilities", 
+                                      (CMPIValue *)buffer.Data, CMPI_chars);
 
-                /* SaHpiSeverityT */
-                printf("*** ResourceSeverity [%s] ***\n", 
-                       oh_lookup_severity(entry.ResourceSeverity));
-                CMSetProperty(instance, "ResourceSeverity", 
-                              (CMPIValue *)oh_lookup_severity(entry.ResourceSeverity), 
-                              CMPI_chars);
+                        /* SaHpiSeverityT */
+                        printf("*** ResourceSeverity [%s] ***\n", 
+                               oh_lookup_severity(entry.ResourceSeverity));
+                        CMSetProperty(instance, "ResourceSeverity", 
+                                      (CMPIValue *)oh_lookup_severity(entry.ResourceSeverity), 
+                                      CMPI_chars);
 
-                /* ResourceFailed */
-                printf("*** ResourceSeverity [%s] ***\n", 
-                       (entry.ResourceFailed == SAHPI_TRUE) ? "TRUE" : "FALSE");
-                CMSetProperty(instance, "ResourceFailed", 
-                              (CMPIValue *)(entry.ResourceFailed == SAHPI_TRUE) 
-                                        ? "TRUE" : "FALSE", 
-                              CMPI_chars);
+                        /* ResourceFailed */
+                        printf("*** ResourceSeverity [%s] ***\n", 
+                               (entry.ResourceFailed == SAHPI_TRUE) ? "TRUE" : "FALSE");
+                        CMSetProperty(instance, "ResourceFailed", 
+                                      (CMPIValue *)(entry.ResourceFailed == SAHPI_TRUE) 
+                                                ? "TRUE" : "FALSE", 
+                                      CMPI_chars);
+                        
+                        /* ResourceTag */
+                        CMSetProperty(instance, "ResourceTag", 
+                                      (CMPIValue *)entry.ResourceTag.Data, CMPI_chars);
 
-                /* ResourceTag */
-                CMSetProperty(instance, "ResourceTag", 
-                              (CMPIValue *)entry.ResourceTag.Data, CMPI_chars);
+                        /* Add the instance for this process to the list of results */
+                        CMReturnInstance(results, instance);
 
-                /* Add the instance for this process to the list of results */
-                CMReturnInstance(results, instance);
+                } while ( rdr_id != SAHPI_LAST_ENTRY );
 
         } while (entry_id != SAHPI_LAST_ENTRY);
 
