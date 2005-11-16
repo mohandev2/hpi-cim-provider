@@ -71,6 +71,11 @@ static CMPIStatus EnumInstanceNames(
         SaHpiRptEntryT entry;
         SaHpiEntryIdT entry_id = SAHPI_FIRST_ENTRY;
 
+        SaHpiEntryIdT rdr_id;
+        SaHpiRdrT     rdr;
+
+        oh_big_textbuffer bigbuf;
+
         /* Commonly needed vars */
         CMPIStatus status = {CMPI_RC_OK, NULL};	/* Return status of CIM operations */
         CMPIObjectPath * objectpath; /* CIM object path of each new instance of this class */
@@ -81,41 +86,58 @@ static CMPIStatus EnumInstanceNames(
 
 
         do {
-                /* Create a new template object path for returning results */
-                objectpath = CMNewObjectPath(_BROKER, namespace, classname, &status);
-                if (status.rc != CMPI_RC_OK) {
-                        _OSBASE_TRACE(1,("%s:EnumInstanceNames() : Failed to create new object path - %s",
-                                      _CLASSNAME, CMGetCharPtr(status.msg)));
-                        CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to create new object path");
-                }
-
 
                 memset(&entry, 0, sizeof(entry));
                 error = saHpiRptEntryGet(hpi_hnd.sid, entry_id, &entry_id, &entry);
 
-                if (error) {
-                        _OSBASE_TRACE(1,("%s:EnumInstanceNames() : Failed to get HPI data", _CLASSNAME));
-                        CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to get HPI data");
+                if (error != SA_OK) {
+                        _OSBASE_TRACE(1,("%s:EnumInstanceNames() : Failed to get HPI RPT data", _CLASSNAME));
+                        CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to get HPI RPT data");
                 }
 
-                oh_big_textbuffer bigbuf;
-                memset(&bigbuf, 0, sizeof(bigbuf));
-                error = oh_decode_entitypath(&entry.ResourceEntity, &bigbuf);
-                printf("*** DeviceID [%s] ***\n", bigbuf.Data);
-                CMAddKey(objectpath, "DeviceID", (CMPIValue *)bigbuf.Data, CMPI_chars);
 
-/*
-                char buff[64];
-                memset(buff, 0, sizeof(buff));
-                sprintf((char *)buff, "%d", entry.ResourceId);
-                CMAddKey(objectpath, "DeviceID", (CMPIValue *)buff, CMPI_chars);
-*/
+                        rdr_id = SAHPI_FIRST_ENTRY;
+                        do {
+                                memset(&rdr, 0, sizeof(rdr));
+                                error = saHpiRdrGet(hpi_hnd.sid, 
+                                                    entry.ResourceId, 
+                                                    rdr_id, 
+                                                    &rdr_id, &rdr);
 
-                CMAddKey(objectpath, "SystemCreationClassName", (CMPIValue *)"Linux_ComputerSystem", CMPI_chars);
-                CMAddKey(objectpath, "SystemName", (CMPIValue *)"Laptop", CMPI_chars);
-                CMAddKey(objectpath, "CreationClassName", (CMPIValue *)"HPI_LogicalDevice", CMPI_chars);
-                /* Add the object path for this resource to the list of results */
-                CMReturnObjectPath(results, objectpath);
+                                if (error != SA_OK) {
+                                        _OSBASE_TRACE(1,("%s:EnumInstanceNames() : Failed to get HPI RDR data", _CLASSNAME));
+                                        CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to get HPI RDR data");
+                                }
+
+                                memset(&bigbuf, 0, sizeof(bigbuf));
+                                error = oh_decode_entitypath(&entry.ResourceEntity, &bigbuf);
+
+                                char buf[1024];
+                                memset(buf, 0, sizeof(buf));
+                                sprintf(buf, "%s{%s}{%d}", bigbuf.Data, oh_lookup_rdrtype(rdr.RdrType), rdr.RecordId);
+
+
+                                /* Create a new template object path for returning results */
+                                objectpath = CMNewObjectPath(_BROKER, namespace, classname, &status);
+                                if (status.rc != CMPI_RC_OK) {
+                                        _OSBASE_TRACE(1,("%s:EnumInstanceNames() : Failed to create new object path - %s",
+                                                         _CLASSNAME, CMGetCharPtr(status.msg)));
+                                        CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to create new object path");
+                                }
+
+                                CMAddKey(objectpath, "DeviceID", (CMPIValue *)buf, CMPI_chars);
+
+                                CMAddKey(objectpath, "SystemCreationClassName", (CMPIValue *)"Linux_ComputerSystem", CMPI_chars);
+
+                                CMAddKey(objectpath, "SystemName", (CMPIValue *)"Laptop", CMPI_chars);
+
+                                CMAddKey(objectpath, "CreationClassName", (CMPIValue *)"HPI_LogicalDevice", CMPI_chars);
+
+                                /* Add the object path for this resource to the list of results */
+                                CMReturnObjectPath(results, objectpath);
+                                
+                        } while (rdr_id != SAHPI_LAST_ENTRY);
+
                 
         } while (entry_id != SAHPI_LAST_ENTRY);
 
@@ -180,12 +202,6 @@ static CMPIStatus EnumInstances(
                 CMSetProperty(instance, "DeviceID", 
                               (CMPIValue *)bigbuf.Data, CMPI_chars);
 
-/*
-                char buff[64];
-                memset(buff, 0, sizeof(buff));
-                sprintf((char *)buff, "%d", entry.ResourceId);
-                CMSetProperty(instance, "DeviceID", (CMPIValue *)buff, CMPI_chars);
-*/
                 CMSetProperty(instance, "SystemCreationClassName", (CMPIValue *)"Linux_ComputerSystem", CMPI_chars);
                 CMSetProperty(instance, "SystemName", (CMPIValue *)"Laptop", CMPI_chars);
                 CMSetProperty(instance, "CreationClassName", (CMPIValue *)"HPI_LogicalDevice", CMPI_chars);
