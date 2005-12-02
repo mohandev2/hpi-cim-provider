@@ -68,3 +68,6 @@ class HPI_LogicalDevice : CIM_LogicalDevice
 
 };
 
+
+
+

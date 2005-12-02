@@ -74,8 +74,6 @@ static CMPIStatus EnumInstanceNames(
         SaHpiEntryIdT rdr_id;
         SaHpiRdrT     rdr;
 
-        oh_big_textbuffer bigbuf;
-
         char buf[1024];
 
         /* Commonly needed vars */
@@ -111,12 +109,15 @@ static CMPIStatus EnumInstanceNames(
                                         CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Failed to get HPI RDR data");
                                 }
 
-                                memset(&bigbuf, 0, sizeof(bigbuf));
-                                error = oh_decode_entitypath(&entry.ResourceEntity, &bigbuf);
-                                
-                                memset(buf, 0, sizeof(buf));
-                                sprintf(buf, "%s{%s}{%d}", bigbuf.Data, oh_lookup_rdrtype(rdr.RdrType), rdr.RecordId);
+                                SaHpiDomainInfoT domain_info;
+                                saHpiDomainInfoGet(hpi_hnd.sid, &domain_info);
 
+                                memset(buf, 0, sizeof(buf));
+                                sprintf(buf, "{Domain ID=%d}{Resource ID=%d}{Management Instrument Type=%s}{Management Instrument ID=%d}", 
+                                        domain_info.DomainId,
+                                        entry.ResourceId,
+                                        oh_lookup_rdrtype(rdr.RdrType), 
+                                        rdr.RecordId);
 
                                 /* Create a new template object path for returning results */
                                 objectpath = CMNewObjectPath(_BROKER, namespace, classname, &status);
@@ -212,14 +213,16 @@ static CMPIStatus EnumInstances(
                         CMSetProperty(instance, "RID", (CMPIValue *)&entry.ResourceId, CMPI_uint32);
                         CMSetProperty(instance, "ElementName", (CMPIValue *)entry.ResourceTag.Data, CMPI_chars);
 
-
-                        memset(&bigbuf, 0, sizeof(bigbuf));
-                        error = oh_decode_entitypath(&entry.ResourceEntity, &bigbuf);
-
+                        SaHpiDomainInfoT domain_info;
+                        saHpiDomainInfoGet(hpi_hnd.sid, &domain_info);
 
                         memset(buf, 0, sizeof(buf));
-                        sprintf(buf, "%s{%s}{%d}", bigbuf.Data, oh_lookup_rdrtype(rdr.RdrType), rdr.RecordId);
-
+                        sprintf(buf, "{Domain ID=%d}{Resource ID=%d}{Management Instrument Type=%s}{Management Instrument ID=%d}", 
+                                domain_info.DomainId,
+                                entry.ResourceId,
+                                oh_lookup_rdrtype(rdr.RdrType), 
+                                rdr.RecordId);
+                        
                         printf("*** DeviceID [%s] ***\n", buf);
                         CMSetProperty(instance, "DeviceID", 
                                       (CMPIValue *)buf, CMPI_chars);
@@ -308,6 +311,8 @@ static CMPIStatus EnumInstances(
                         //                oh_big_textbuffer bigbuf;
                         //                memset(&bigbuf, 0, sizeof(bigbuf));
                         //                error = oh_decode_entitypath(&entry.ResourceEntity, &bigbuf);
+                        memset(&bigbuf, 0, sizeof(bigbuf));
+                        error = oh_decode_entitypath(&entry.ResourceEntity, &bigbuf);                        
                         printf("*** EntityPath [%s] ***\n", bigbuf.Data);
                         CMSetProperty(instance, "EntityPath", 
                                       (CMPIValue *)bigbuf.Data, CMPI_chars);
