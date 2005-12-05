@@ -14,6 +14,8 @@
  *
  */
 
+#include <SaHpi.h>
+
 int management_instrument_id(SaHpiRdrT  *rdr)
 {
 

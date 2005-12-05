@@ -27,7 +27,7 @@ static char _CLASSNAME[] = "HPI_LogicalDevice";
 #include "cmpimacs.h"
 #include <SaHpi.h>
 #include <oh_utils.h>
-#include <include/hpi_utils.h>
+#include <hpi_utils.h>
 
 /* NULL terminated list of key property names for this class */
 static char * _KEYNAMES[] = {"RID", NULL};
