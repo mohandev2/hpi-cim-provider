@@ -49,7 +49,7 @@ providerdir = @PROVIDERDIR@
 # LIST EACH CMPI CLASS PROVIDER LIBRARY, ITS SOURCE FILE(S), AND ANY LIBS REQUIRED FOR LINKING HERE
 # Files and Directories CMPI provider libraries
 provider_LTLIBRARIES = libHPI_LogicalDevice.la
-libHPI_LogicalDevice_la_SOURCES = src/Hpi.c
+libHPI_LogicalDevice_la_SOURCES = src/Hpi.c src/hpi_utils.c
 #libHPI_LogicalDevice_la_LIBADD = -lopenhpi
 libHPI_LogicalDevice_la_LDFLAGS = @OPENHPI_LIBS@ -version-info @HPI_CIM_VERSION@
 
