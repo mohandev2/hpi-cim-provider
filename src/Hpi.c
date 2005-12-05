@@ -27,6 +27,7 @@ static char _CLASSNAME[] = "HPI_LogicalDevice";
 #include "cmpimacs.h"
 #include <SaHpi.h>
 #include <oh_utils.h>
+#include <hpi_utils.h>
 
 /* NULL terminated list of key property names for this class */
 static char * _KEYNAMES[] = {"RID", NULL};
@@ -73,6 +74,7 @@ static CMPIStatus EnumInstanceNames(
 
         SaHpiEntryIdT rdr_id;
         SaHpiRdrT     rdr;
+        int rval;
 
         char buf[1024];
 
@@ -112,12 +114,17 @@ static CMPIStatus EnumInstanceNames(
                                 SaHpiDomainInfoT domain_info;
                                 saHpiDomainInfoGet(hpi_hnd.sid, &domain_info);
 
+                                rval = management_instrument_id(&rdr);
+
+                                if (rval == -1) 
+                                        CMReturnWithChars(_BROKER, CMPI_RC_ERR_FAILED, "Invalid Rdr Type");
+                                
                                 memset(buf, 0, sizeof(buf));
                                 sprintf(buf, "{Domain ID=%d}{Resource ID=%d}{Management Instrument Type=%s}{Management Instrument ID=%d}", 
                                         domain_info.DomainId,
                                         entry.ResourceId,
                                         oh_lookup_rdrtype(rdr.RdrType), 
-                                        rdr.RecordId);
+                                        (SaHpiInstrumentIdT)rval);
 
                                 /* Create a new template object path for returning results */
                                 objectpath = CMNewObjectPath(_BROKER, namespace, classname, &status);
