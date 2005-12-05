@@ -26,6 +26,8 @@ EXTRA_DIST+= hpi-cim.spec
 AM_CFLAGS = @CFLAGS@
 INCLUDES  = @OPENHPI_CFLAGS@ @CMPI_CFLAGS@
 
+include_HEADERS = $(top_srcdir)/include/hpi_utils.h
+
 # ==================================================================
 # Automake instructions for documentation
 # ==================================================================
